@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Forced-Choice Pilot</title>
+
+  <!-- jsPsych core -->
+  <script src="https://unpkg.com/jspsych@8.2.2"></script>
+  <link href="https://unpkg.com/jspsych@8.2.2/css/jspsych.css" rel="stylesheet" type="text/css" />
+
+  <!-- plugins -->
+  <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.1.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-instructions@2.1.0"></script>
+</head>
+<body></body>
+
+<script>
+  // initialize jsPsych
+  const jsPsych = initJsPsych({
+    on_finish: function() {
+      jsPsych.data.displayData();
+    }
+  });
+
+  // timeline container
+  const timeline = [];
+
+  // instructions
+  const instructions = {
+    type: jsPsychInstructions,
+    pages: [
+      `
+      <p><strong>Welcome to the study.</strong></p>
+      <p>You will see two personality adjectives.</p>
+      <p>Your task is to choose the trait that is <strong>more desirable for a customer service representative</strong>.</p>
+      <p>Press <strong>F</strong> for the word on the left.</p>
+      <p>Press <strong>J</strong> for the word on the right.</p>
+      `,
+      `
+      <p>Please respond as quickly and accurately as you can.</p>
+      <p>Press <strong>Next</strong> to begin.</p>
+      `
+    ],
+    show_clickable_nav: true
+  };
+
+  timeline.push(instructions);
+
+  // fixation screen
+  const fixation = {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: '<div style="font-size: 48px;">+</div>',
+    choices: "NO_KEYS",
+    trial_duration: 500
+  };
+
+  // sample adjective pairs
+  const stimuli = [
+    { left: "organized", right: "friendly", condition: "high-high", pair_id: 1 },
+    { left: "careful", right: "bold", condition: "low-high", pair_id: 2 },
+    { left: "quiet", right: "stubborn", condition: "low-low", pair_id: 3 }
+  ];
+
+  // build trials
+  stimuli.forEach(item => {
+    timeline.push(fixation);
+
+    timeline.push({
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus: `
+        <p style="font-size: 22px; margin-bottom: 40px;">
+          Which trait is more desirable for a customer service representative?
+        </p>
+
+        <div style="display: flex; justify-content: space-around; align-items: center; margin-top: 30px;">
+          <div style="text-align: center; width: 40%;">
+            <div style="font-size: 18px; margin-bottom: 12px;"><strong>F</strong></div>
+            <div style="font-size: 32px;">${item.left}</div>
+          </div>
+
+          <div style="text-align: center; width: 40%;">
+            <div style="font-size: 18px; margin-bottom: 12px;"><strong>J</strong></div>
+            <div style="font-size: 32px;">${item.right}</div>
+          </div>
+        </div>
+      `,
+      choices: ["f", "j"],
+      data: {
+        task: "forced_choice",
+        left_word: item.left,
+        right_word: item.right,
+        condition: item.condition,
+        pair_id: item.pair_id
+      }
+    });
+  });
+
+  // ending screen
+  const end_screen = {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: `
+      <p>You have finished the task.</p>
+      <p>Press any key to see your data.</p>
+    `
+  };
+
+  timeline.push(end_screen);
+
+  // run experiment
+  jsPsych.run(timeline);
+</script>
+</html>
