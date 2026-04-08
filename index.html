@@ -16,10 +16,64 @@
 <body></body>
 
 <script>
+  // -----------------------------
+  // helper: get URL parameters
+  // example: ?sona_id=12345
+  // -----------------------------
+  function getUrlParam(param) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param);
+  }
+
+  const sona_id = getUrlParam("sona_id") || "";
+  const study_id = "forced_choice_pilot";
+
+  // your Google Apps Script web app URL
+  const scriptURL = "https://script.google.com/macros/s/AKfycbzfxBvQdKRdmUKWwbAP2uYWtgbofdlvKfGrI04PQJ5wqoAFMG5IJTgqxa6ai1TW8zoN1g/exec";
+
   // initialize jsPsych
   const jsPsych = initJsPsych({
-    on_finish: function() {
-      jsPsych.data.displayData();
+    on_finish: async function() {
+      const allData = jsPsych.data.get().values();
+
+      const payload = {
+        sona_id: sona_id,
+        study_id: study_id,
+        timestamp: new Date().toISOString(),
+        responses: allData
+      };
+
+      try {
+        const response = await fetch(scriptURL, {
+          method: "POST",
+          mode: "cors",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.text();
+        console.log("Saved to Google Sheets:", result);
+
+        document.body.innerHTML = `
+          <div class="jspsych-content">
+            <p><strong>Thank you.</strong></p>
+            <p>Your responses have been recorded.</p>
+            <p>You may now close this window.</p>
+          </div>
+        `;
+      } catch (error) {
+        console.error("Error saving data:", error);
+
+        document.body.innerHTML = `
+          <div class="jspsych-content">
+            <p><strong>The task is complete, but there was a problem saving your data.</strong></p>
+            <p>Please contact the researcher and provide this ID:</p>
+            <p><strong>${sona_id || "NO_SONA_ID"}</strong></p>
+          </div>
+        `;
+      }
     }
   });
 
@@ -38,7 +92,6 @@
       <p>Press <strong>J</strong> for the word on the right.</p>
       `,
       `
-    
       <p>Press <strong>Next</strong> to begin.</p>
       `
     ],
@@ -52,14 +105,19 @@
     type: jsPsychHtmlKeyboardResponse,
     stimulus: '<div style="font-size: 48px;">+</div>',
     choices: "NO_KEYS",
-    trial_duration: 500
+    trial_duration: 500,
+    data: {
+      task: "fixation",
+      sona_id: sona_id,
+      study_id: study_id
+    }
   };
 
   // sample adjective pairs
   const stimuli = [
-    { left: "organized", right: "friendly", pair_id: 1 },
-    { left: "careful", right: "bold", pair_id: 2 },
-    { left: "quiet", right: "stubborn", pair_id: 3 }
+    { left: "organized", right: "friendly", pair_id: 1, condition: "matched_positive" },
+    { left: "careful", right: "bold", pair_id: 2, condition: "mixed" },
+    { left: "quiet", right: "stubborn", pair_id: 3, condition: "matched_negative" }
   ];
 
   // build trials
@@ -91,7 +149,9 @@
         left_word: item.left,
         right_word: item.right,
         condition: item.condition,
-        pair_id: item.pair_id
+        pair_id: item.pair_id,
+        sona_id: sona_id,
+        study_id: study_id
       }
     });
   });
@@ -101,8 +161,13 @@
     type: jsPsychHtmlKeyboardResponse,
     stimulus: `
       <p>You have finished the task.</p>
-      <p>Press any key to see your data.</p>
-    `
+      <p>Press any key to submit your responses.</p>
+    `,
+    data: {
+      task: "end_screen",
+      sona_id: sona_id,
+      study_id: study_id
+    }
   };
 
   timeline.push(end_screen);
