@@ -16,10 +16,6 @@
 <body></body>
 
 <script>
-  // -----------------------------
-  // helper: get URL parameters
-  // example: ?sona_id=12345
-  // -----------------------------
   function getUrlParam(param) {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get(param);
@@ -27,11 +23,8 @@
 
   const sona_id = getUrlParam("sona_id") || "";
   const study_id = "forced_choice_pilot";
-
-  // your Google Apps Script web app URL
   const scriptURL = "https://script.google.com/macros/s/AKfycbzfxBvQdKRdmUKWwbAP2uYWtgbofdlvKfGrI04PQJ5wqoAFMG5IJTgqxa6ai1TW8zoN1g/exec";
 
-  // initialize jsPsych
   const jsPsych = initJsPsych({
     on_finish: async function() {
       const allData = jsPsych.data.get().values();
@@ -44,22 +37,16 @@
       };
 
       try {
-        const response = await fetch(scriptURL, {
+        await fetch(scriptURL, {
           method: "POST",
-          mode: "cors",
-          headers: {
-            "Content-Type": "application/json"
-          },
+          mode: "no-cors",
           body: JSON.stringify(payload)
         });
-
-        const result = await response.text();
-        console.log("Saved to Google Sheets:", result);
 
         document.body.innerHTML = `
           <div class="jspsych-content">
             <p><strong>Thank you.</strong></p>
-            <p>Your responses have been recorded.</p>
+            <p>Your responses have been submitted.</p>
             <p>You may now close this window.</p>
           </div>
         `;
@@ -77,10 +64,8 @@
     }
   });
 
-  // timeline container
   const timeline = [];
 
-  // instructions
   const instructions = {
     type: jsPsychInstructions,
     pages: [
@@ -100,7 +85,6 @@
 
   timeline.push(instructions);
 
-  // fixation screen
   const fixation = {
     type: jsPsychHtmlKeyboardResponse,
     stimulus: '<div style="font-size: 48px;">+</div>',
@@ -113,14 +97,12 @@
     }
   };
 
-  // sample adjective pairs
   const stimuli = [
     { left: "organized", right: "friendly", pair_id: 1, condition: "matched_positive" },
     { left: "careful", right: "bold", pair_id: 2, condition: "mixed" },
     { left: "quiet", right: "stubborn", pair_id: 3, condition: "matched_negative" }
   ];
 
-  // build trials
   stimuli.forEach(item => {
     timeline.push(fixation);
 
@@ -156,7 +138,6 @@
     });
   });
 
-  // ending screen
   const end_screen = {
     type: jsPsychHtmlKeyboardResponse,
     stimulus: `
@@ -172,7 +153,6 @@
 
   timeline.push(end_screen);
 
-  // run experiment
   jsPsych.run(timeline);
 </script>
 </html>
