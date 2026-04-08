@@ -21,46 +21,35 @@
     return urlParams.get(param);
   }
 
-  const sona_id = getUrlParam("sona_id") || "";
+  function makeTimestampForFilename() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    const seconds = String(now.getSeconds()).padStart(2, "0");
+    return `${year}${month}${day}_${hours}${minutes}${seconds}`;
+  }
+
+  const sona_id = getUrlParam("sona_id") || "NO_SONA_ID";
   const study_id = "forced_choice_pilot";
-  const scriptURL = "https://script.google.com/macros/s/AKfycbzfxBvQdKRdmUKWwbAP2uYWtgbofdlvKfGrI04PQJ5wqoAFMG5IJTgqxa6ai1TW8zoN1g/exec";
 
   const jsPsych = initJsPsych({
-    on_finish: async function() {
-      const allData = jsPsych.data.get().values();
+    on_finish: function() {
+      const filename = `${study_id}_${sona_id}_${makeTimestampForFilename()}.csv`;
 
-      const payload = {
-        sona_id: sona_id,
-        study_id: study_id,
-        timestamp: new Date().toISOString(),
-        responses: allData
-      };
+      // Download the full dataset as a CSV file
+      jsPsych.data.get().localSave("csv", filename);
 
-      try {
-        await fetch(scriptURL, {
-          method: "POST",
-          mode: "no-cors",
-          body: JSON.stringify(payload)
-        });
-
-        document.body.innerHTML = `
-          <div class="jspsych-content">
-            <p><strong>Thank you.</strong></p>
-            <p>Your responses have been submitted.</p>
-            <p>You may now close this window.</p>
-          </div>
-        `;
-      } catch (error) {
-        console.error("Error saving data:", error);
-
-        document.body.innerHTML = `
-          <div class="jspsych-content">
-            <p><strong>The task is complete, but there was a problem saving your data.</strong></p>
-            <p>Please contact the researcher and provide this ID:</p>
-            <p><strong>${sona_id || "NO_SONA_ID"}</strong></p>
-          </div>
-        `;
-      }
+      document.body.innerHTML = `
+        <div class="jspsych-content">
+          <p><strong>Thank you.</strong></p>
+          <p>Your responses have been saved as a CSV file.</p>
+          <p>Please keep this file and upload/store it according to the study instructions.</p>
+          <p><strong>File name:</strong> ${filename}</p>
+        </div>
+      `;
     }
   });
 
@@ -75,12 +64,18 @@
       <p>Your task is to identify the trait that is <strong>more desirable for a customer service representative</strong>.</p>
       <p>Press <strong>F</strong> for the word on the left.</p>
       <p>Press <strong>J</strong> for the word on the right.</p>
+      <p>Please respond as accurately and quickly as you can.</p>
       `,
       `
       <p>Press <strong>Next</strong> to begin.</p>
       `
     ],
-    show_clickable_nav: true
+    show_clickable_nav: true,
+    data: {
+      task: "instructions",
+      sona_id: sona_id,
+      study_id: study_id
+    }
   };
 
   timeline.push(instructions);
@@ -98,12 +93,11 @@
   };
 
   const stimuli = [
-    { left: "Antgonistic", right: "Inefficient", pair_id: 16_30, condition: "matched_negative" },
+    { left: "Antagonistic", right: "Inefficient", pair_id: 1, condition: "matched_negative" },
     { left: "Cooperative", right: "Precise", pair_id: 2, condition: "matched_positive" },
     { left: "Trustful", right: "Organized", pair_id: 3, condition: "matched_positive" },
-    { left: "Sympathetic", right: "Active", pair_id: 4, condition: "matched_positive"},
-    { left: "Warm". right: "Merry", pair_id: 5, condition: "matched_positive"},
-    
+    { left: "Sympathetic", right: "Active", pair_id: 4, condition: "matched_positive" },
+    { left: "Warm", right: "Merry", pair_id: 5, condition: "matched_positive" }
   ];
 
   stimuli.forEach(item => {
@@ -145,7 +139,7 @@
     type: jsPsychHtmlKeyboardResponse,
     stimulus: `
       <p>You have finished the task.</p>
-      <p>Press any key to submit your responses.</p>
+      <p>Press any key to save your responses as a CSV file.</p>
     `,
     data: {
       task: "end_screen",
