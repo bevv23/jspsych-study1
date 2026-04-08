@@ -72,7 +72,7 @@
       `
       <p><strong>Welcome to the study.</strong></p>
       <p>You will see two personality adjectives.</p>
-      <p>Your task is to choose the trait that is <strong>more desirable for a customer service representative</strong>.</p>
+      <p>Your task is to identify the trait that is <strong>more desirable for a customer service representative</strong>.</p>
       <p>Press <strong>F</strong> for the word on the left.</p>
       <p>Press <strong>J</strong> for the word on the right.</p>
       `,
@@ -98,9 +98,12 @@
   };
 
   const stimuli = [
-    { left: "organized", right: "friendly", pair_id: 1, condition: "matched_positive" },
-    { left: "careful", right: "bold", pair_id: 2, condition: "mixed" },
-    { left: "quiet", right: "stubborn", pair_id: 3, condition: "matched_negative" }
+    { left: "Antgonistic", right: "Inefficient", pair_id: 16_30, condition: "matched_negative" },
+    { left: "Cooperative", right: "Precise", pair_id: 2, condition: "matched_positive" },
+    { left: "Trustful", right: "Organized", pair_id: 3, condition: "matched_positive" },
+    { left: "Sympathetic", right: "Active", pair_id: 4, condition: "matched_positive"},
+    { left: "Warm". right: "Merry", pair_id: 5, condition: "matched_positive"},
+    
   ];
 
   stimuli.forEach(item => {
