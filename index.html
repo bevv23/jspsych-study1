@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Forced-Choice Pilot</title>
+  <title>Response Latencies Study 2</title>
 
   <!-- jsPsych core -->
   <script src="https://unpkg.com/jspsych@8.2.2"></script>
@@ -12,6 +12,59 @@
   <!-- plugins -->
   <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.1.0"></script>
   <script src="https://unpkg.com/@jspsych/plugin-instructions@2.1.0"></script>
+
+  <style>
+    body {
+      background: #ffffff;
+    }
+
+    .trial-wrapper {
+      max-width: 1000px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .trial-question {
+      font-size: 24px;
+      margin-bottom: 18px;
+      line-height: 1.4;
+    }
+
+    .trial-subtext {
+      font-size: 17px;
+      margin-bottom: 50px;
+      line-height: 1.5;
+    }
+
+    .pair-row {
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-start;
+      margin-top: 30px;
+      gap: 40px;
+    }
+
+    .pair-option {
+      width: 40%;
+      text-align: center;
+    }
+
+    .key-label {
+      font-size: 18px;
+      margin-bottom: 14px;
+      font-weight: bold;
+    }
+
+    .word-label {
+      font-size: 38px;
+      line-height: 1.2;
+    }
+
+    .fixation {
+      font-size: 56px;
+      text-align: center;
+    }
+  </style>
 </head>
 <body></body>
 
@@ -21,60 +74,145 @@
     return urlParams.get(param);
   }
 
-  function makeTimestampForFilename() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
-    const hours = String(now.getHours()).padStart(2, "0");
-    const minutes = String(now.getMinutes()).padStart(2, "0");
-    const seconds = String(now.getSeconds()).padStart(2, "0");
-    return `${year}${month}${day}_${hours}${minutes}${seconds}`;
-  }
-
   const sona_id = getUrlParam("sona_id") || "NO_SONA_ID";
-  const study_id = "forced_choice_pilot";
+  const return_url = getUrlParam("return_url");
+  const study_id = "response_latencies_study_2";
 
   const jsPsych = initJsPsych({
-    on_finish: function() {
-      const filename = `${study_id}_${sona_id}_${makeTimestampForFilename()}.csv`;
+    on_finish: function () {
+      // For testing only: inspect data in browser console
+      console.log(jsPsych.data.get().csv());
 
-      // Download the full dataset as a CSV file
-      jsPsych.data.get().localSave("csv", filename);
-
-      document.body.innerHTML = `
-        <div class="jspsych-content">
-          <p><strong>Thank you.</strong></p>
-          <p>Your responses have been saved as a CSV file.</p>
-          <p>Please keep this file and upload/store it according to the study instructions.</p>
-          <p><strong>File name:</strong> ${filename}</p>
-        </div>
-      `;
+      if (return_url) {
+        const separator = return_url.includes("?") ? "&" : "?";
+        window.location.href =
+          return_url +
+          separator +
+          "sona_id=" + encodeURIComponent(sona_id) +
+          "&completed=1";
+      } else {
+        document.body.innerHTML = `
+          <div class="jspsych-content">
+            <p><strong>Task complete.</strong></p>
+            <p>No return URL was provided.</p>
+            <p>Your SONA ID: ${sona_id}</p>
+          </div>
+        `;
+      }
     }
   });
 
+  jsPsych.data.addProperties({
+    sona_id: sona_id,
+    study_id: study_id
+  });
+
   const timeline = [];
+
+  function randomizePairSides(pair) {
+    const flip = Math.random() < 0.5;
+
+    if (flip) {
+      return {
+        pair_id: pair.pair_id,
+        condition: pair.condition || "",
+        pair_type: pair.pair_type || "",
+        word1: pair.word1,
+        word2: pair.word2,
+        display_left: pair.word2,
+        display_right: pair.word1,
+        is_flipped: 1
+      };
+    } else {
+      return {
+        pair_id: pair.pair_id,
+        condition: pair.condition || "",
+        pair_type: pair.pair_type || "",
+        word1: pair.word1,
+        word2: pair.word2,
+        display_left: pair.word1,
+        display_right: pair.word2,
+        is_flipped: 0
+      };
+    }
+  }
+
+  function makeTrial(item, taskLabel) {
+    return {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus: `
+        <div class="trial-wrapper">
+          <div class="trial-question">
+            Which personality adjective below is more desirable in someone applying for the Customer Service Representative job?
+          </div>
+
+          <div class="trial-subtext">
+            (Use the <strong>S</strong> key on your keyboard to select the one on the left
+            and the <strong>K</strong> key to select the one on the right.)
+          </div>
+
+          <div class="pair-row">
+            <div class="pair-option">
+              <div class="key-label">S</div>
+              <div class="word-label">${item.display_left}</div>
+            </div>
+
+            <div class="pair-option">
+              <div class="key-label">K</div>
+              <div class="word-label">${item.display_right}</div>
+            </div>
+          </div>
+        </div>
+      `,
+      choices: ["s", "k"],
+      data: {
+        task: taskLabel,
+        pair_id: item.pair_id,
+        condition: item.condition,
+        pair_type: item.pair_type,
+        word1: item.word1,
+        word2: item.word2,
+        display_left: item.display_left,
+        display_right: item.display_right,
+        is_flipped: item.is_flipped
+      },
+      on_finish: function(data) {
+        data.response_side = data.response === "s" ? "left" : "right";
+        data.chosen_adjective = data.response === "s" ? item.display_left : item.display_right;
+        data.unchosen_adjective = data.response === "s" ? item.display_right : item.display_left;
+        data.chose_word1 = data.chosen_adjective === item.word1 ? 1 : 0;
+        data.chose_word2 = data.chosen_adjective === item.word2 ? 1 : 0;
+      }
+    };
+  }
 
   const instructions = {
     type: jsPsychInstructions,
     pages: [
       `
-      <p><strong>Welcome to the study.</strong></p>
-      <p>You will see two personality adjectives.</p>
-      <p>Your task is to identify the trait that is <strong>more desirable for a customer service representative</strong>.</p>
-      <p>Press <strong>F</strong> for the word on the left.</p>
-      <p>Press <strong>J</strong> for the word on the right.</p>
-      <p>Please respond as accurately and quickly as you can.</p>
+      <div class="trial-wrapper">
+        <p><strong>Welcome to the study.</strong></p>
+        <p>You will be presented with pairs of personality adjectives.</p>
+        <p>
+          For each pair, your task is to identify the more desirable personality attribute
+          in someone applying for the <strong>Customer Service Representative</strong> job.
+        </p>
+        <p>Press <strong>S</strong> for the adjective on the left.</p>
+        <p>Press <strong>K</strong> for the adjective on the right.</p>
+        <p>Please respond as accurately and quickly as you can.</p>
+      </div>
       `,
       `
-      <p>Press <strong>Next</strong> to begin.</p>
+      <div class="trial-wrapper">
+        <p>Before the main task, you will complete <strong>3 practice trials</strong>.</p>
+        <p>After the practice trials, the main adjective-pair task will begin.</p>
+        <p>Press <strong>Next</strong> to continue.</p>
+      </div>
       `
     ],
     show_clickable_nav: true,
     data: {
-      task: "instructions",
-      sona_id: sona_id,
-      study_id: study_id
+      task: "instructions"
     }
   };
 
@@ -82,73 +220,123 @@
 
   const fixation = {
     type: jsPsychHtmlKeyboardResponse,
-    stimulus: '<div style="font-size: 48px;">+</div>',
+    stimulus: '<div class="fixation">+</div>',
     choices: "NO_KEYS",
     trial_duration: 500,
     data: {
-      task: "fixation",
-      sona_id: sona_id,
-      study_id: study_id
+      task: "fixation"
     }
   };
 
-  const stimuli = [
-    { left: "Antagonistic", right: "Inefficient", pair_id: 1, condition: "matched_negative" },
-    { left: "Cooperative", right: "Precise", pair_id: 2, condition: "matched_positive" },
-    { left: "Trustful", right: "Organized", pair_id: 3, condition: "matched_positive" },
-    { left: "Sympathetic", right: "Active", pair_id: 4, condition: "matched_positive" },
-    { left: "Warm", right: "Merry", pair_id: 5, condition: "matched_positive" }
+  const practiceStimuli = [
+    { pair_id: "practice_1", word1: "Kind", word2: "Reckless" },
+    { pair_id: "practice_2", word1: "Caring", word2: "Thorough" },
+    { pair_id: "practice_3", word1: "Harsh", word2: "Careless" }
   ];
 
-  stimuli.forEach(item => {
+  const randomizedPracticeStimuli = practiceStimuli.map(randomizePairSides);
+
+  randomizedPracticeStimuli.forEach(item => {
     timeline.push(fixation);
-
-    timeline.push({
-      type: jsPsychHtmlKeyboardResponse,
-      stimulus: `
-        <p style="font-size: 22px; margin-bottom: 40px;">
-          Which trait is more desirable for a customer service representative?
-        </p>
-
-        <div style="display: flex; justify-content: space-around; align-items: center; margin-top: 30px;">
-          <div style="text-align: center; width: 40%;">
-            <div style="font-size: 18px; margin-bottom: 12px;"><strong>F</strong></div>
-            <div style="font-size: 32px;">${item.left}</div>
-          </div>
-
-          <div style="text-align: center; width: 40%;">
-            <div style="font-size: 18px; margin-bottom: 12px;"><strong>J</strong></div>
-            <div style="font-size: 32px;">${item.right}</div>
-          </div>
-        </div>
-      `,
-      choices: ["f", "j"],
-      data: {
-        task: "forced_choice",
-        left_word: item.left,
-        right_word: item.right,
-        condition: item.condition,
-        pair_id: item.pair_id,
-        sona_id: sona_id,
-        study_id: study_id
-      }
-    });
+    timeline.push(makeTrial(item, "practice_forced_choice"));
   });
 
-  const end_screen = {
+  const startMainTask = {
     type: jsPsychHtmlKeyboardResponse,
     stimulus: `
-      <p>You have finished the task.</p>
-      <p>Press any key to save your responses as a CSV file.</p>
+      <div class="trial-wrapper">
+        <p>You have completed the practice trials.</p>
+        <p>The main task will now begin.</p>
+        <p>Press any key to continue.</p>
+      </div>
     `,
     data: {
-      task: "end_screen",
-      sona_id: sona_id,
-      study_id: study_id
+      task: "start_main_task"
     }
   };
 
-  timeline.push(end_screen);
+  timeline.push(startMainTask);
+
+  const mainStimuli = [
+    { pair_id: 1, word1: "Agreeable", word2: "Polished", condition: "matched", pair_type: "matched_positive" },
+    { pair_id: 2, word1: "Cooperative", word2: "Precise", condition: "matched", pair_type: "matched_positive" },
+    { pair_id: 3, word1: "Helpful", word2: "Efficient", condition: "matched", pair_type: "matched_positive" },
+    { pair_id: 4, word1: "Kind", word2: "Organized", condition: "matched", pair_type: "matched_positive" },
+    { pair_id: 5, word1: "Trustful", word2: "Neat", condition: "matched", pair_type: "matched_positive" },
+    { pair_id: 6, word1: "Patient", word2: "Consistent", condition: "matched", pair_type: "matched_positive" },
+    { pair_id: 7, word1: "Considerate", word2: "Lively", condition: "matched", pair_type: "matched_positive" },
+    { pair_id: 8, word1: "Sympathetic", word2: "Outgoing", condition: "matched", pair_type: "matched_positive" },
+    { pair_id: 9, word1: "Warm", word2: "Merry", condition: "matched", pair_type: "matched_positive" },
+    { pair_id: 10, word1: "Caring", word2: "Jolly", condition: "matched", pair_type: "matched_positive" },
+    { pair_id: 11, word1: "Gentle", word2: "Active", condition: "matched", pair_type: "matched_positive" },
+    { pair_id: 12, word1: "Responsible", word2: "Friendly", condition: "matched", pair_type: "matched_positive" },
+    { pair_id: 13, word1: "Thorough", word2: "Calm", condition: "matched", pair_type: "matched_positive" },
+
+    { pair_id: 14, word1: "Harsh", word2: "Careless", condition: "matched", pair_type: "matched_negative" },
+    { pair_id: 15, word1: "Rude", word2: "Unreliable", condition: "matched", pair_type: "matched_negative" },
+    { pair_id: 16, word1: "Hostile", word2: "Inconsistent", condition: "matched", pair_type: "matched_negative" },
+    { pair_id: 17, word1: "Revengeful", word2: "Negligent", condition: "matched", pair_type: "matched_negative" },
+    { pair_id: 18, word1: "Cold", word2: "Envious", condition: "matched", pair_type: "matched_negative" },
+    { pair_id: 19, word1: "Antagonistic", word2: "Irritable", condition: "matched", pair_type: "matched_negative" },
+    { pair_id: 20, word1: "Ruthless", word2: "Moody", condition: "matched", pair_type: "matched_negative" },
+    { pair_id: 21, word1: "Spiteful", word2: "Weepy", condition: "matched", pair_type: "matched_negative" },
+    { pair_id: 22, word1: "Inefficient", word2: "Jealous", condition: "matched", pair_type: "matched_negative" },
+    { pair_id: 23, word1: "Impulsive", word2: "Insecure", condition: "matched", pair_type: "matched_negative" },
+    { pair_id: 24, word1: "Introverted", word2: "Anxious", condition: "matched", pair_type: "matched_negative" },
+    { pair_id: 25, word1: "Shy", word2: "Nervous", condition: "matched", pair_type: "matched_negative" },
+    { pair_id: 26, word1: "Withdrawn", word2: "Tense", condition: "matched", pair_type: "matched_negative" },
+
+    { pair_id: 27, word1: "Agreeable", word2: "Tense", condition: "mixed", pair_type: "mixed" },
+    { pair_id: 28, word1: "Cooperative", word2: "Nervous", condition: "mixed", pair_type: "mixed" },
+    { pair_id: 29, word1: "Helpful", word2: "Anxious", condition: "mixed", pair_type: "mixed" },
+    { pair_id: 30, word1: "Kind", word2: "Insecure", condition: "mixed", pair_type: "mixed" },
+    { pair_id: 31, word1: "Trustful", word2: "Jealous", condition: "mixed", pair_type: "mixed" },
+    { pair_id: 32, word1: "Patient", word2: "Weepy", condition: "mixed", pair_type: "mixed" },
+    { pair_id: 33, word1: "Considerate", word2: "Moody", condition: "mixed", pair_type: "mixed" },
+    { pair_id: 34, word1: "Sympathetic", word2: "Irritable", condition: "mixed", pair_type: "mixed" },
+    { pair_id: 35, word1: "Warm", word2: "Envious", condition: "mixed", pair_type: "mixed" },
+    { pair_id: 36, word1: "Caring", word2: "Negligent", condition: "mixed", pair_type: "mixed" },
+    { pair_id: 37, word1: "Gentle", word2: "Inconsistent", condition: "mixed", pair_type: "mixed" },
+    { pair_id: 38, word1: "Responsible", word2: "Unreliable", condition: "mixed", pair_type: "mixed" },
+    { pair_id: 39, word1: "Thorough", word2: "Careless", condition: "mixed", pair_type: "mixed" },
+    { pair_id: 40, word1: "Harsh", word2: "Calm", condition: "mixed", pair_type: "mixed" },
+    { pair_id: 41, word1: "Rude", word2: "Friendly", condition: "mixed", pair_type: "mixed" },
+    { pair_id: 42, word1: "Hostile", word2: "Active", condition: "mixed", pair_type: "mixed" },
+    { pair_id: 43, word1: "Revengeful", word2: "Jolly", condition: "mixed", pair_type: "mixed" },
+    { pair_id: 44, word1: "Cold", word2: "Merry", condition: "mixed", pair_type: "mixed" },
+    { pair_id: 45, word1: "Antagonistic", word2: "Outgoing", condition: "mixed", pair_type: "mixed" },
+    { pair_id: 46, word1: "Ruthless", word2: "Lively", condition: "mixed", pair_type: "mixed" },
+    { pair_id: 47, word1: "Spiteful", word2: "Consistent", condition: "mixed", pair_type: "mixed" },
+    { pair_id: 48, word1: "Inefficient", word2: "Neat", condition: "mixed", pair_type: "mixed" },
+    { pair_id: 49, word1: "Impulsive", word2: "Organized", condition: "mixed", pair_type: "mixed" },
+    { pair_id: 50, word1: "Introverted", word2: "Efficient", condition: "mixed", pair_type: "mixed" },
+    { pair_id: 51, word1: "Shy", word2: "Precise", condition: "mixed", pair_type: "mixed" },
+    { pair_id: 52, word1: "Withdrawn", word2: "Polished", condition: "mixed", pair_type: "mixed" }
+  ];
+
+  const randomizedMainStimuli = jsPsych.randomization.shuffle(
+    mainStimuli.map(randomizePairSides)
+  );
+
+  randomizedMainStimuli.forEach(item => {
+    timeline.push(fixation);
+    timeline.push(makeTrial(item, "main_forced_choice"));
+  });
+
+  const endScreen = {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: `
+      <div class="trial-wrapper">
+        <p>You have finished the adjective-pair task.</p>
+        <p>Press any key to continue.</p>
+      </div>
+    `,
+    data: {
+      task: "end_screen"
+    }
+  };
+
+  timeline.push(endScreen);
 
   jsPsych.run(timeline);
 </script>
