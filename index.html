@@ -75,30 +75,19 @@
   }
 
   const sona_id = getUrlParam("sona_id") || "NO_SONA_ID";
-  const return_url = getUrlParam("return_url");
   const study_id = "response_latencies_study_2";
+
+  // Hardcoded return Qualtrics survey link
+  const return_url = "https://uteppsychology.az1.qualtrics.com/jfe/form/SV_6nxWdRPgkB7ftMG";
 
   const jsPsych = initJsPsych({
     on_finish: function () {
-      // For testing only: inspect data in browser console
       console.log(jsPsych.data.get().csv());
 
-      if (return_url) {
-        const separator = return_url.includes("?") ? "&" : "?";
-        window.location.href =
-          return_url +
-          separator +
-          "sona_id=" + encodeURIComponent(sona_id) +
-          "&completed=1";
-      } else {
-        document.body.innerHTML = `
-          <div class="jspsych-content">
-            <p><strong>Task complete.</strong></p>
-            <p>No return URL was provided.</p>
-            <p>Your SONA ID: ${sona_id}</p>
-          </div>
-        `;
-      }
+      window.location.href =
+        return_url +
+        "?sona_id=" + encodeURIComponent(sona_id) +
+        "&completed=1";
     }
   });
 
