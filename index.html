@@ -80,16 +80,19 @@
   // Hardcoded return Qualtrics survey link
   const return_url = "https://uteppsychology.az1.qualtrics.com/jfe/form/SV_6nxWdRPgkB7ftMG";
 
-  const jsPsych = initJsPsych({
-    on_finish: function () {
-      console.log(jsPsych.data.get().csv());
+const jsPsych = initJsPsych({
+  on_finish: function () {
+    const data_json = jsPsych.data.get().json();
+    const data_csv = jsPsych.data.get().csv();
 
-      window.location.href =
-        return_url +
-        "?sona_id=" + encodeURIComponent(sona_id) +
-        "&completed=1";
-    }
-  });
+    window.location.href =
+      return_url +
+      "?sona_id=" + encodeURIComponent(sona_id) +
+      "&jspsych_json=" + encodeURIComponent(data_json) +
+      "&jspsych_csv=" + encodeURIComponent(data_csv) +
+      "&completed=1";
+  }
+});
 
   jsPsych.data.addProperties({
     sona_id: sona_id,
