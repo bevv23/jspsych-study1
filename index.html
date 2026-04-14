@@ -82,18 +82,16 @@
 
 const jsPsych = initJsPsych({
   on_finish: function () {
-    const data_json = jsPsych.data.get().json();
-    const data_csv = jsPsych.data.get().csv();
+    const n_main_trials = jsPsych.data.get().filter({ task: "main_forced_choice" }).count();
 
     window.location.href =
       return_url +
       "?sona_id=" + encodeURIComponent(sona_id) +
-      "&jspsych_json=" + encodeURIComponent(data_json) +
-      "&jspsych_csv=" + encodeURIComponent(data_csv) +
-      "&completed=1";
+      "&completed=1" +
+      "&n_main_trials=" + encodeURIComponent(n_main_trials);
   }
 });
-
+  
   jsPsych.data.addProperties({
     sona_id: sona_id,
     study_id: study_id
