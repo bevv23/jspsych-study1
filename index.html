@@ -81,34 +81,21 @@
 
   on_finish: function () {
 
-  const n_main_trials = jsPsych.data.get().filter({ task: "main_forced_choice" }).count();
+ const return_url = "https://uteppsychology.az1.qualtrics.com/jfe/form/SV_6nxWdRPgkB7ftMG";
 
-  // SAVE DATA TO QUALTRICS
-  Qualtrics.SurveyEngine.setEmbeddedData(
-    "jspsych_data",
-    jsPsych.data.get().json()
-  );
+const jsPsych = initJsPsych({
+  on_finish: function () {
+    const n_main_trials = jsPsych.data.get().filter({ task: "main_forced_choice" }).count();
 
-  Qualtrics.SurveyEngine.setEmbeddedData(
-    "n_main_trials",
-    n_main_trials
-  );
-
-  Qualtrics.SurveyEngine.setEmbeddedData(
-    "completed",
-    "1"
-  );
-
-  // small delay so Qualtrics actually saves it
-  setTimeout(function () {
-    window.location.href =
-      return_url +
-      "?sona_id=" + encodeURIComponent(sona_id) +
-      "&completed=1";
-  }, 500);
-}
-  });
-
+    setTimeout(function () {
+      window.location.href =
+        return_url +
+        "?sona_id=" + encodeURIComponent(sona_id) +
+        "&completed=1" +
+        "&n_main_trials=" + encodeURIComponent(n_main_trials);
+    }, 500);
+  }
+});
   jsPsych.data.addProperties({
     sona_id: sona_id,
     study_id: study_id
