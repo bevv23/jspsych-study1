@@ -35,9 +35,11 @@ function getUrlParam(param) {
 const sona_id = getUrlParam("sona_id") || "NO_SONA_ID";
 const return_url = "https://uteppsychology.az1.qualtrics.com/jfe/form/SV_6nxWdRPgkB7ftMG";
 
-  const jsPsych = initJsPsych({
+const jsPsych = initJsPsych({
   on_finish: function () {
-    const n_main_trials = jsPsych.data.get().filter({ task: "main_forced_choice" }).count();
+    const main_data = jsPsych.data.get().filter({ task: "main_forced_choice" });
+    const n_main_trials = main_data.count();
+    const last_trial = main_data.last(1).values()[0] || {};
 
     const final_url = new URL(return_url);
     final_url.searchParams.set("sona_id", sona_id);
