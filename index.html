@@ -3,23 +3,153 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>jsPsych Test</title>
+  <title>Response Latencies Study 2</title>
 
   <script src="https://unpkg.com/jspsych@8.2.2"></script>
   <link href="https://unpkg.com/jspsych@8.2.2/css/jspsych.css" rel="stylesheet" />
 
   <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.1.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-instructions@2.1.0"></script>
+
+  <style>
+    body { background: #ffffff; }
+    .trial-wrapper { max-width: 1000px; margin: 0 auto; text-align: center; }
+    .trial-question { font-size: 24px; margin-bottom: 18px; }
+    .trial-subtext { font-size: 17px; margin-bottom: 50px; }
+    .pair-row { display: flex; justify-content: space-around; margin-top: 30px; }
+    .pair-option { width: 40%; }
+    .key-label { font-size: 18px; margin-bottom: 10px; font-weight: bold; }
+    .word-label { font-size: 36px; }
+    .fixation { font-size: 56px; }
+  </style>
 </head>
+
 <body></body>
 
 <script>
-  const jsPsych = initJsPsych();
+function getUrlParam(param) {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get(param);
+}
 
-  const trial = {
-    type: jsPsychHtmlKeyboardResponse,
-    stimulus: "<p>Hello! If you can see this, GitHub + jsPsych are working.</p><p>Press any key.</p>"
+const sona_id = getUrlParam("sona_id") || "NO_SONA_ID";
+const return_url = "https://uteppsychology.az1.qualtrics.com/jfe/form/SV_6nxWdRPgkB7ftMG";
+
+const jsPsych = initJsPsych({
+  on_finish: function () {
+    const n_main_trials = jsPsych.data.get().filter({ task: "main_forced_choice" }).count();
+
+    window.location.href =
+      return_url +
+      "?sona_id=" + encodeURIComponent(sona_id) +
+      "&completed=1" +
+      "&n_main_trials=" + encodeURIComponent(n_main_trials);
+  }
+});
+
+const timeline = [];
+
+// RANDOMIZE HORIZONTAL
+function randomizePairSides(pair) {
+  const flip = Math.random() < 0.5;
+
+  return {
+    ...pair,
+    display_left: flip ? pair.word2 : pair.word1,
+    display_right: flip ? pair.word1 : pair.word2,
+    is_flipped: flip ? 1 : 0
   };
+}
 
-  jsPsych.run([trial]);
+// TRIAL
+function makeTrial(item, taskLabel) {
+  return {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: `
+      <div class="trial-wrapper">
+        <div class="trial-question">
+          Which adjective is more desirable for a Customer Service Representative?
+        </div>
+
+        <div class="trial-subtext">
+          Press S for left, K for right
+        </div>
+
+        <div class="pair-row">
+          <div class="pair-option">
+            <div class="key-label">S</div>
+            <div class="word-label">${item.display_left}</div>
+          </div>
+
+          <div class="pair-option">
+            <div class="key-label">K</div>
+            <div class="word-label">${item.display_right}</div>
+          </div>
+        </div>
+      </div>
+    `,
+    choices: ["s", "k"],
+    data: {
+      task: taskLabel,
+      pair_id: item.pair_id,
+      condition: item.condition,
+      word1: item.word1,
+      word2: item.word2,
+      is_flipped: item.is_flipped
+    },
+    on_finish: function(data) {
+      const chosen = data.response === "s" ? item.display_left : item.display_right;
+
+      data.chosen = chosen;
+      data.chose_word1 = chosen === item.word1 ? 1 : 0;
+      data.chose_word2 = chosen === item.word2 ? 1 : 0;
+
+      if (item.condition === "mixed") {
+        data.chose_more_desirable = chosen === item.word1 ? 1 : 0;
+      } else {
+        data.chose_more_desirable = "";
+      }
+    }
+  };
+}
+
+// FIXATION
+const fixation = {
+  type: jsPsychHtmlKeyboardResponse,
+  stimulus: '<div class="fixation">+</div>',
+  choices: "NO_KEYS",
+  trial_duration: 500
+};
+
+// INSTRUCTIONS
+timeline.push({
+  type: jsPsychInstructions,
+  pages: [
+    "<p>Welcome! You will choose the more desirable adjective.</p>",
+    "<p>Press S for left, K for right.</p>"
+  ],
+  show_clickable_nav: true
+});
+
+// MAIN STIMULI 
+const mainStimuli = [
+  { pair_id: 1, word1: "Kind", word2: "Rude", condition: "mixed" },
+  { pair_id: 2, word1: "Helpful", word2: "Harsh", condition: "mixed" }
+];
+
+// RUN
+const randomized = jsPsych.randomization.shuffle(mainStimuli.map(randomizePairSides));
+
+randomized.forEach(item => {
+  timeline.push(fixation);
+  timeline.push(makeTrial(item, "main_forced_choice"));
+});
+
+timeline.push({
+  type: jsPsychHtmlKeyboardResponse,
+  stimulus: "<p>Done! Press any key.</p>"
+});
+
+jsPsych.run(timeline);
 </script>
 </html>
