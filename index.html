@@ -43,6 +43,10 @@ const return_url = "https://uteppsychology.az1.qualtrics.com/jfe/form/SV_6nxWdRP
     final_url.searchParams.set("sona_id", sona_id);
     final_url.searchParams.set("completed", "1");
     final_url.searchParams.set("n_main_trials", String(n_main_trials));
+    final_url.searchParams.set("last_choice", String(last_trial.chosen || ""));
+    final_url.searchParams.set("last_rt", String(last_trial.rt || ""));
+    final_url.searchParams.set("last_pair_id", String(last_trial.pair_id || ""));
+    final_url.searchParams.set("last_is_flipped", String(last_trial.is_flipped || ""));
 
     window.location.assign(final_url.toString());
   }
