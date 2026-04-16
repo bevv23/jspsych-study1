@@ -5,65 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Response Latencies Study 2</title>
 
-  <!-- jsPsych core -->
   <script src="https://unpkg.com/jspsych@8.2.2"></script>
-  <link href="https://unpkg.com/jspsych@8.2.2/css/jspsych.css" rel="stylesheet" type="text/css" />
+  <link href="https://unpkg.com/jspsych@8.2.2/css/jspsych.css" rel="stylesheet" />
 
-  <!-- plugins -->
   <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.1.0"></script>
   <script src="https://unpkg.com/@jspsych/plugin-instructions@2.1.0"></script>
 
   <style>
-    body {
-      background: #ffffff;
-    }
-
-    .trial-wrapper {
-      max-width: 1000px;
-      margin: 0 auto;
-      text-align: center;
-    }
-
-    .trial-question {
-      font-size: 24px;
-      margin-bottom: 18px;
-      line-height: 1.4;
-    }
-
-    .trial-subtext {
-      font-size: 17px;
-      margin-bottom: 50px;
-      line-height: 1.5;
-    }
-
-    .pair-row {
-      display: flex;
-      justify-content: space-around;
-      align-items: flex-start;
-      margin-top: 30px;
-      gap: 40px;
-    }
-
-    .pair-option {
-      width: 40%;
-      text-align: center;
-    }
-
-    .key-label {
-      font-size: 18px;
-      margin-bottom: 14px;
-      font-weight: bold;
-    }
-
-    .word-label {
-      font-size: 38px;
-      line-height: 1.2;
-    }
-
-    .fixation {
-      font-size: 56px;
-      text-align: center;
-    }
+    body { background: #ffffff; }
+    .trial-wrapper { max-width: 1000px; margin: 0 auto; text-align: center; }
+    .trial-question { font-size: 24px; margin-bottom: 18px; line-height: 1.4; }
+    .trial-subtext { font-size: 17px; margin-bottom: 50px; line-height: 1.5; }
+    .pair-row { display: flex; justify-content: space-around; align-items: flex-start; margin-top: 30px; gap: 40px; }
+    .pair-option { width: 40%; text-align: center; }
+    .key-label { font-size: 18px; margin-bottom: 14px; font-weight: bold; }
+    .word-label { font-size: 38px; line-height: 1.2; }
+    .fixation { font-size: 56px; text-align: center; }
   </style>
 </head>
 <body></body>
@@ -76,26 +33,20 @@
 
   const sona_id = getUrlParam("sona_id") || "NO_SONA_ID";
   const study_id = "response_latencies_study_2";
-
   const return_url = "https://uteppsychology.az1.qualtrics.com/jfe/form/SV_6nxWdRPgkB7ftMG";
 
-  on_finish: function () {
+  const jsPsych = initJsPsych({
+    on_finish: function () {
+      const n_main_trials = jsPsych.data.get().filter({ task: "main_forced_choice" }).count();
 
- const return_url = "https://uteppsychology.az1.qualtrics.com/jfe/form/SV_6nxWdRPgkB7ftMG";
-
-const jsPsych = initJsPsych({
-  on_finish: function () {
-    const n_main_trials = jsPsych.data.get().filter({ task: "main_forced_choice" }).count();
-
-    setTimeout(function () {
       window.location.href =
         return_url +
         "?sona_id=" + encodeURIComponent(sona_id) +
         "&completed=1" +
         "&n_main_trials=" + encodeURIComponent(n_main_trials);
+    }
+  });
 
-  }
-});
   jsPsych.data.addProperties({
     sona_id: sona_id,
     study_id: study_id
@@ -141,7 +92,7 @@ const jsPsych = initJsPsych({
           </div>
 
           <div class="trial-subtext">
-            (Use the <strong>S</strong> key on your keyboard to select the one on the left
+            (Use the <strong>S</strong> key to select the one on the left
             and the <strong>K</strong> key to select the one on the right.)
           </div>
 
@@ -179,12 +130,6 @@ const jsPsych = initJsPsych({
         data.chose_word1 = data.chosen_adjective === item.word1 ? 1 : 0;
         data.chose_word2 = data.chosen_adjective === item.word2 ? 1 : 0;
 
-        data.standard_word1 = item.word1;
-        data.standard_word2 = item.word2;
-        data.standard_chosen = data.chosen_adjective === item.word1 ? item.word1 : item.word2;
-        data.standard_unchosen = data.chosen_adjective === item.word1 ? item.word2 : item.word1;
-
-        // mixed pairs only: word1 is the more desirable adjective
         if (item.condition === "mixed") {
           data.more_desirable_word = item.word1;
           data.less_desirable_word = item.word2;
@@ -207,10 +152,7 @@ const jsPsych = initJsPsych({
       <div class="trial-wrapper">
         <p><strong>Welcome to the study.</strong></p>
         <p>You will be presented with pairs of personality adjectives.</p>
-        <p>
-          For each pair, your task is to identify the more desirable personality attribute
-          in someone applying for the <strong>Customer Service Representative</strong> job.
-        </p>
+        <p>For each pair, identify the more desirable personality attribute in someone applying for the <strong>Customer Service Representative</strong> job.</p>
         <p>Press <strong>S</strong> for the adjective on the left.</p>
         <p>Press <strong>K</strong> for the adjective on the right.</p>
         <p>Please respond as accurately and quickly as you can.</p>
@@ -225,9 +167,7 @@ const jsPsych = initJsPsych({
       `
     ],
     show_clickable_nav: true,
-    data: {
-      task: "instructions"
-    }
+    data: { task: "instructions" }
   };
 
   timeline.push(instructions);
@@ -237,9 +177,7 @@ const jsPsych = initJsPsych({
     stimulus: '<div class="fixation">+</div>',
     choices: "NO_KEYS",
     trial_duration: 500,
-    data: {
-      task: "fixation"
-    }
+    data: { task: "fixation" }
   };
 
   const practiceStimuli = [
@@ -264,9 +202,7 @@ const jsPsych = initJsPsych({
         <p>Press any key to continue.</p>
       </div>
     `,
-    data: {
-      task: "start_main_task"
-    }
+    data: { task: "start_main_task" }
   };
 
   timeline.push(startMainTask);
@@ -328,9 +264,7 @@ const jsPsych = initJsPsych({
     { pair_id: 52, word1: "Withdrawn", word2: "Polished", condition: "mixed", pair_type: "mixed" }
   ];
 
-  const randomizedMainStimuli = jsPsych.randomization.shuffle(
-    mainStimuli.map(randomizePairSides)
-  );
+  const randomizedMainStimuli = jsPsych.randomization.shuffle(mainStimuli.map(randomizePairSides));
 
   randomizedMainStimuli.forEach(item => {
     timeline.push(fixation);
@@ -345,9 +279,7 @@ const jsPsych = initJsPsych({
         <p>Press any key to continue.</p>
       </div>
     `,
-    data: {
-      task: "end_screen"
-    }
+    data: { task: "end_screen" }
   };
 
   timeline.push(endScreen);
