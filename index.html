@@ -39,14 +39,22 @@ const jsPsych = initJsPsych({
   on_finish: function () {
     const n_main_trials = jsPsych.data.get().filter({ task: "main_forced_choice" }).count();
 
-    window.location.href =
-      return_url +
-      "?sona_id=" + encodeURIComponent(sona_id) +
-      "&completed=1" +
-      "&n_main_trials=" + encodeURIComponent(n_main_trials);
+    const final_url = new URL(return_url);
+    final_url.searchParams.set("sona_id", sona_id);
+    final_url.searchParams.set("completed", "1");
+    final_url.searchParams.set("n_main_trials", String(n_main_trials));
+
+    document.body.innerHTML = `
+      <div style="font-family: Arial, sans-serif; text-align: center; margin-top: 80px;">
+        <h1>GitHub redirect test</h1>
+        <p><strong>sona_id:</strong> ${sona_id}</p>
+        <p><strong>n_main_trials:</strong> ${n_main_trials}</p>
+        <p><strong>Final URL:</strong></p>
+        <p style="word-break: break-all; max-width: 900px; margin: 0 auto;">${final_url.toString()}</p>
+      </div>
+    `;
   }
 });
-
 const timeline = [];
 
 // RANDOMIZE HORIZONTAL
