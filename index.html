@@ -3,12 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Response Latencies Study 2</title>
+<title>Desirale Attributes at Work</title>
 
 <script src="https://unpkg.com/jspsych@8.2.2"></script>
 <link href="https://unpkg.com/jspsych@8.2.2/css/jspsych.css" rel="stylesheet">
 <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.1.0"></script>
 <script src="https://unpkg.com/@jspsych/plugin-instructions@2.1.0"></script>
+<script src="https://unpkg.com/@jspsych/plugin-survey-html-form@2.1.0"></script>
 
 <style>
 html, body {
@@ -39,8 +40,10 @@ button,
   font-size: 16px !important;
 }
 
-.instructions-box {
-  max-width: 760px;
+.instructions-box,
+.debrief-box,
+.form-box {
+  max-width: 800px;
   margin: 40px auto;
   text-align: left;
   color: #000000;
@@ -50,7 +53,9 @@ button,
   padding-top: 24px;
 }
 
-.instructions-title {
+.instructions-title,
+.debrief-title,
+.form-title {
   text-align: center;
   font-weight: bold;
   font-size: 28px;
@@ -67,6 +72,27 @@ button,
 .job-title {
   font-weight: bold;
   margin-bottom: 12px;
+}
+
+.question-block {
+  margin-bottom: 28px;
+}
+
+.question-title {
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.option-line {
+  display: block;
+  margin: 6px 0;
+}
+
+.text-input {
+  width: 260px;
+  padding: 6px;
+  border: 1px solid #000000;
+  font-size: 16px;
 }
 
 .trial-wrapper {
@@ -149,6 +175,9 @@ const jsPsych = initJsPsych({
     const main_data = jsPsych.data.get().filter({ task: "main_forced_choice" });
     const trials = main_data.values();
 
+    const followup = jsPsych.data.get().filter({ task: "followup_questions" }).values()[0] || {};
+    const demographics = jsPsych.data.get().filter({ task: "demographic_questions" }).values()[0] || {};
+
     function joinField(field) {
       return trials.map(t => t[field]).join("|");
     }
@@ -166,6 +195,19 @@ const jsPsych = initJsPsych({
     final_url.searchParams.set("chose_more_desirable", joinField("chose_more_desirable"));
     final_url.searchParams.set("rts", joinField("rt"));
     final_url.searchParams.set("is_flipped", joinField("is_flipped"));
+
+    final_url.searchParams.set("imc", String(followup.imc || ""));
+    final_url.searchParams.set("english", String(followup.english || ""));
+    final_url.searchParams.set("careless", String(followup.careless || ""));
+
+    final_url.searchParams.set("age", String(demographics.age || ""));
+    final_url.searchParams.set("gender", String(demographics.gender || ""));
+    final_url.searchParams.set("gender_text", String(demographics.gender_text || ""));
+    final_url.searchParams.set("year_school", String(demographics.year_school || ""));
+    final_url.searchParams.set("year_school_text", String(demographics.year_school_text || ""));
+    final_url.searchParams.set("ethnicity", String(demographics.ethnicity || ""));
+    final_url.searchParams.set("ethnicity_text", String(demographics.ethnicity_text || ""));
+    final_url.searchParams.set("hispanic", String(demographics.hispanic || ""));
 
     window.location.assign(final_url.toString());
   }
@@ -250,6 +292,13 @@ function makeTrial(item, taskLabel, isPractice = false) {
   };
 }
 
+function parseSurveyResponse(data) {
+  const response = data.response || {};
+  Object.keys(response).forEach(key => {
+    data[key] = response[key];
+  });
+}
+
 const fixation = {
   type: jsPsychHtmlKeyboardResponse,
   stimulus: '<div class="fixation-wrapper"><div class="fixation">+</div></div>',
@@ -276,16 +325,18 @@ timeline.push({
         <p>Key responsibilities include identifying customer needs, troubleshooting problems, processing orders or requests, and escalating complex issues when necessary. The representative maintains detailed and accurate records of customer interactions and follows up to ensure resolution and satisfaction.</p>
       </div>
 
-      <p>You will receive 1 SONA research participation credit for completing this task. If you correctly identify the more desirable attribute in over 90% of the pairs, your reward will double and you will be awarded 2 SONA research participation credits in total.</p>
+      <p>You will receive 1 SONA research participation credit for completing this task. If you correctly identify the more desirable attribute in over 90% of the pairs, your reward will double and you will be awarded 2 SONA research participation credit in total.</p>
 
-      <p>The adjective pairs will appear on the screen one pair at a time, with one adjective to the left and one to the right. Use the “S” key on your keyboard to select the one on the left and the “K” key on your keyboard to select the one on the right.</p>
+      <p>The adjective pairs will appear on the screen one pair at the time, with one adjective to the left and one to the right. Use the “S” key on your keyboard to select the one on the left and the “K” key on your keyboard to select one to the right.</p>
 
       <p>Before you proceed to the main questionnaire, you will be presented with 3 practice pairs to familiarize yourself with the task and get used to keyboard keys.</p>
     </div>
     `
   ],
   show_clickable_nav: true,
-  button_label_next: "next"
+  allow_backward: false,
+  show_page_number: false,
+  button_label_next: "->"
 });
 
 const practiceStimuli = [
@@ -305,7 +356,9 @@ timeline.push({
     '<p>You have finished the practice trials.</p><p>The main task will begin next.</p><p>Please respond as quickly and accurately as possible.</p>'
   ],
   show_clickable_nav: true,
-  button_label_next: "Start"
+  allow_backward: false,
+  show_page_number: false,
+  button_label_next: "Begin"
 });
 
 const mainStimuli = [
@@ -322,7 +375,6 @@ const mainStimuli = [
   { pair_id: 11, word1: "Gentle", word2: "Active", condition: "matched_positive" },
   { pair_id: 12, word1: "Responsible", word2: "Friendly", condition: "matched_positive" },
   { pair_id: 13, word1: "Thorough", word2: "Calm", condition: "matched_positive" },
-
   { pair_id: 14, word1: "Harsh", word2: "Careless", condition: "matched_negative" },
   { pair_id: 15, word1: "Rude", word2: "Unreliable", condition: "matched_negative" },
   { pair_id: 16, word1: "Hostile", word2: "Inconsistent", condition: "matched_negative" },
@@ -336,7 +388,6 @@ const mainStimuli = [
   { pair_id: 24, word1: "Introverted", word2: "Anxious", condition: "matched_negative" },
   { pair_id: 25, word1: "Shy", word2: "Nervous", condition: "matched_negative" },
   { pair_id: 26, word1: "Withdrawn", word2: "Tense", condition: "matched_negative" },
-
   { pair_id: 27, word1: "Agreeable", word2: "Tense", condition: "mixed", more_desirable: "Agreeable" },
   { pair_id: 28, word1: "Cooperative", word2: "Nervous", condition: "mixed", more_desirable: "Cooperative" },
   { pair_id: 29, word1: "Helpful", word2: "Anxious", condition: "mixed", more_desirable: "Helpful" },
@@ -350,7 +401,6 @@ const mainStimuli = [
   { pair_id: 37, word1: "Gentle", word2: "Inconsistent", condition: "mixed", more_desirable: "Gentle" },
   { pair_id: 38, word1: "Responsible", word2: "Unreliable", condition: "mixed", more_desirable: "Responsible" },
   { pair_id: 39, word1: "Thorough", word2: "Careless", condition: "mixed", more_desirable: "Thorough" },
-
   { pair_id: 40, word1: "Harsh", word2: "Calm", condition: "mixed", more_desirable: "Calm" },
   { pair_id: 41, word1: "Rude", word2: "Friendly", condition: "mixed", more_desirable: "Friendly" },
   { pair_id: 42, word1: "Hostile", word2: "Active", condition: "mixed", more_desirable: "Active" },
@@ -372,8 +422,126 @@ jsPsych.randomization.shuffle(mainStimuli.map(randomizePairSides)).forEach(item 
 });
 
 timeline.push({
-  type: jsPsychHtmlKeyboardResponse,
-  stimulus: "<p>Done! Press any key to submit your responses.</p>"
+  type: jsPsychInstructions,
+  pages: [
+    `
+    <div class="debrief-box">
+      <div class="debrief-title">DEBRIEF</div>
+
+      <p>Thank you for completing the questionnaire!</p>
+
+      <p>As stated at the beginning of the study, the purpose of this study was to examine how efficient people are in identifying personality attributes that are more desirable in applicants for a specific job. You were presented with 52 pairs of personality attributes. Some of those pairs were mixed, composed of one undesirable and one desirable attribute for the target job (for instance, Kind vs Reckless), and some pairs were matched, composed of attributes that were similar in desirability for the target job (for instance, Caring vs Thorough). Our research hypothesis was that participants would identify the more desirable attribute more efficiently — that is, with less time and effort — in mixed pairs than in matched pairs.</p>
+
+      <p>In mixed pairs, the more desirable option may be easier to distinguish, whereas in matched pairs the preferred option may be less clear and more open to individual interpretation. Accordingly, you will be awarded 2 SONA research participation credits for completing this study regardless of your choices of personality attributes.</p>
+
+      <p>Please proceed and answer the 3 follow-up questions and the demographic questions to complete this study.</p>
+    </div>
+    `
+  ],
+  show_clickable_nav: true,
+  allow_backward: false,
+  show_page_number: false,
+  button_label_next: "Proceed"
+});
+
+timeline.push({
+  type: jsPsychSurveyHtmlForm,
+  data: { task: "followup_questions" },
+  preamble: `
+    <div class="form-box">
+      <div class="form-title">DATA QUALITY CHECKS</div>
+  `,
+  html: `
+      <div class="question-block">
+        <div class="question-title">1. Instructional manipulation check</div>
+        <p>Please mark the option below that best describes your choices of attributes:</p>
+        <p>I compared each attribute pair with respect to how desirable it would be to be possessed by an applicant for the job of:</p>
+
+        <label class="option-line"><input type="radio" name="imc" value="1" required> High School Teacher</label>
+        <label class="option-line"><input type="radio" name="imc" value="2"> Firefighter</label>
+        <label class="option-line"><input type="radio" name="imc" value="3"> Data Analyst</label>
+        <label class="option-line"><input type="radio" name="imc" value="4"> Customer Service Representative</label>
+        <label class="option-line"><input type="radio" name="imc" value="5"> Sales Representative</label>
+      </div>
+
+      <div class="question-block">
+        <div class="question-title">2. English proficiency self-report</div>
+        <p>How would you rate your proficiency in understanding written English?</p>
+
+        <label class="option-line"><input type="radio" name="english" value="1" required> Low</label>
+        <label class="option-line"><input type="radio" name="english" value="2"> Moderate</label>
+        <label class="option-line"><input type="radio" name="english" value="3"> High</label>
+      </div>
+
+      <div class="question-block">
+        <div class="question-title">3. Self-report measure of careless/insufficient effort responding</div>
+        <p>Results of our study will depend a lot on the quality of your responses. Is there any reason we should exclude your responses from our data analysis (e.g., you were being distracted while choosing the attributes; your computer was malfunctioning while completing the questionnaire; you did not put forth an effort in identifying more desirable attributes; you were selecting attributes at random…)?</p>
+        <p><em>You will receive 2 credits for this study no matter how you respond to this question.</em></p>
+
+        <label class="option-line"><input type="radio" name="careless" value="1" required> Yes – my responses SHOULD be thrown out</label>
+        <label class="option-line"><input type="radio" name="careless" value="2"> No – my survey responses SHOULD NOT be thrown out</label>
+      </div>
+    </div>
+  `,
+  button_label: "Next",
+  on_finish: parseSurveyResponse
+});
+
+timeline.push({
+  type: jsPsychSurveyHtmlForm,
+  data: { task: "demographic_questions" },
+  preamble: `
+    <div class="form-box">
+      <div class="form-title">DEMOGRAPHIC QUESTIONS</div>
+  `,
+  html: `
+      <div class="question-block">
+        <div class="question-title">How old are you?</div>
+        <input class="text-input" type="number" name="age" min="18" max="99" required>
+      </div>
+
+      <div class="question-block">
+        <div class="question-title">What is your gender?</div>
+        <label class="option-line"><input type="radio" name="gender" value="1" required> Man</label>
+        <label class="option-line"><input type="radio" name="gender" value="2"> Woman</label>
+        <label class="option-line"><input type="radio" name="gender" value="3"> Non-binary</label>
+        <label class="option-line"><input type="radio" name="gender" value="4"> Prefer to self-describe</label>
+        <input class="text-input" type="text" name="gender_text" placeholder="Optional self-description">
+        <label class="option-line"><input type="radio" name="gender" value="5"> Prefer not to answer</label>
+      </div>
+
+      <div class="question-block">
+        <div class="question-title">What year of school are you in?</div>
+        <label class="option-line"><input type="radio" name="year_school" value="1" required> Freshman</label>
+        <label class="option-line"><input type="radio" name="year_school" value="2"> Sophomore</label>
+        <label class="option-line"><input type="radio" name="year_school" value="3"> Junior</label>
+        <label class="option-line"><input type="radio" name="year_school" value="4"> Senior</label>
+        <label class="option-line"><input type="radio" name="year_school" value="5"> Prefer to self-describe</label>
+        <input class="text-input" type="text" name="year_school_text" placeholder="Optional self-description">
+        <label class="option-line"><input type="radio" name="year_school" value="6"> Prefer not to answer</label>
+      </div>
+
+      <div class="question-block">
+        <div class="question-title">What is your ethnicity?</div>
+        <label class="option-line"><input type="radio" name="ethnicity" value="1" required> American Indian / Alaskan Indian</label>
+        <label class="option-line"><input type="radio" name="ethnicity" value="2"> Native Hawaiian or Other Pacific Islander</label>
+        <label class="option-line"><input type="radio" name="ethnicity" value="3"> Black / African American</label>
+        <label class="option-line"><input type="radio" name="ethnicity" value="4"> White / Caucasian</label>
+        <label class="option-line"><input type="radio" name="ethnicity" value="5"> Prefer to self-describe</label>
+        <input class="text-input" type="text" name="ethnicity_text" placeholder="Optional self-description">
+        <label class="option-line"><input type="radio" name="ethnicity" value="6"> Prefer not to answer</label>
+      </div>
+
+      <div class="question-block">
+        <div class="question-title">Are you Hispanic or Latino?</div>
+        <label class="option-line"><input type="radio" name="hispanic" value="1" required> Yes</label>
+        <label class="option-line"><input type="radio" name="hispanic" value="2"> No</label>
+        <label class="option-line"><input type="radio" name="hispanic" value="3"> Prefer not to answer</label>
+      </div>
+    </div>
+  `,
+  button_label: "Submit",
+  on_finish: parseSurveyResponse
 });
 
 jsPsych.run(timeline);
