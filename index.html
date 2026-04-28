@@ -12,46 +12,52 @@
 <script src="https://unpkg.com/@jspsych/plugin-instructions@2.1.0"></script>
 
 <style>
-body { background:#ffffff; }
+body {
+  background: #ffffff;
+}
 
 .trial-wrapper {
-  width:1000px;
-  margin:0 auto;
-  text-align:center;
+  width: 1000px;
+  margin: 0 auto;
+  text-align: center;
 }
 
 .pair-row {
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  column-gap:150px;
-  align-items:start;
-  margin-top:110px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 150px;
+  align-items: start;
+  margin-top: 110px;
 }
 
-.pair-option { width:100%; }
+.pair-option {
+  width: 100%;
+}
 
 .key-label {
-  font-size:22px;
-  font-weight:bold;
-  margin-bottom:18px;
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 18px;
 }
 
 .word-label {
-  font-size:42px;
-  white-space:nowrap;
+  font-size: 42px;
+  white-space: nowrap;
 }
 
 .practice-question {
-  font-size:24px;
-  margin-bottom:30px;
+  font-size: 24px;
+  margin-bottom: 30px;
 }
 
 .practice-subtext {
-  font-size:18px;
-  margin-bottom:40px;
+  font-size: 18px;
+  margin-bottom: 40px;
 }
 
-.fixation { font-size:56px; }
+.fixation {
+  font-size: 56px;
+}
 </style>
 </head>
 
@@ -84,14 +90,19 @@ const jsPsych = initJsPsych({
       final_url.searchParams.set(`trial${n}_condition`, String(t.condition));
       final_url.searchParams.set(`trial${n}_word1`, String(t.word1));
       final_url.searchParams.set(`trial${n}_word2`, String(t.word2));
+
       final_url.searchParams.set(`trial${n}_left_word`, String(t.display_left));
       final_url.searchParams.set(`trial${n}_right_word`, String(t.display_right));
-      final_url.searchParams.set(`trial${n}_choice`, String(t.chosen));
-      final_url.searchParams.set(`trial${n}_response_key`, String(t.response));
-      final_url.searchParams.set(`trial${n}_rt`, String(t.rt));
+
+      final_url.searchParams.set(`trial${n}_key_pressed`, String(t.response));
+      final_url.searchParams.set(`trial${n}_chosen_actual`, String(t.chosen_actual));
+      final_url.searchParams.set(`trial${n}_chosen_standardized`, String(t.chosen_standardized));
+
       final_url.searchParams.set(`trial${n}_chose_word1`, String(t.chose_word1));
       final_url.searchParams.set(`trial${n}_chose_word2`, String(t.chose_word2));
       final_url.searchParams.set(`trial${n}_chose_more_desirable`, String(t.chose_more_desirable));
+
+      final_url.searchParams.set(`trial${n}_rt`, String(t.rt));
       final_url.searchParams.set(`trial${n}_is_flipped`, String(t.is_flipped));
     });
 
@@ -103,6 +114,7 @@ const timeline = [];
 
 function randomizePairSides(pair) {
   const flip = Math.random() < 0.5;
+
   return {
     ...pair,
     display_left: flip ? pair.word2 : pair.word1,
@@ -155,14 +167,33 @@ function makeTrial(item, taskLabel, isPractice = false) {
     },
 
     on_finish: function(data) {
-      const chosen = data.response === "s" ? item.display_left : item.display_right;
+      const pressedLeft = data.response === "s";
+      const chosen = pressedLeft ? item.display_left : item.display_right;
 
-      data.chosen = chosen;
-      data.chose_word1 = chosen === item.word1 ? 1 : 0;
-      data.chose_word2 = chosen === item.word2 ? 1 : 0;
+      data.chosen_actual = chosen;
 
+      if (chosen === item.word1) {
+        data.chosen_standardized = "word1";
+        data.chose_word1 = 1;
+        data.chose_word2 = 0;
+      } else if (chosen === item.word2) {
+        data.chosen_standardized = "word2";
+        data.chose_word1 = 0;
+        data.chose_word2 = 1;
+      } else {
+        data.chosen_standardized = "";
+        data.chose_word1 = "";
+        data.chose_word2 = "";
+      }
+
+      /*
+        For mixed pairs:
+        Pairs 27-39 have word1 as the desirable option.
+        Pairs 40-52 have word2 as the desirable option.
+      */
       if (item.condition === "mixed") {
-        data.chose_more_desirable = chosen === item.word1 ? 1 : 0;
+        const desirableWord = item.more_desirable;
+        data.chose_more_desirable = chosen === desirableWord ? 1 : 0;
       } else {
         data.chose_more_desirable = "";
       }
@@ -181,20 +212,22 @@ timeline.push({
   type: jsPsychInstructions,
   pages: [
     `<p>Each job requires a specific skill set but also specific personality attributes to be performed successfully.</p>
-     <p>In this study, you will be presented with pairs of adjectives reflecting personality attributes.</p>
-     <p>For each pair, your task is to identify the more desirable personality attribute in a person applying for a Customer Service Representative job.</p>`,
+     <p>Accordingly, in choosing the best job candidate, hiring managers are often assessing if applicants possess the required, desirable personality attributes for the job they applied for.</p>
+     <p>In this study, you will be presented with pairs of adjectives reflecting various personality attributes.</p>
+     <p>For each pair, your task will be to identify the more desirable personality attribute in a person applying for a Customer Service Representative job.</p>`,
 
     `<p><strong>Customer Service Representative job description</strong></p>
-     <p>A Customer Service Representative provides high-quality support to customers by addressing inquiries, resolving issues, and delivering accurate information about products and services.</p>
-     <p>This role involves communicating with customers by phone, email, or chat, identifying customer needs, troubleshooting problems, processing requests, and ensuring customer satisfaction.</p>`,
+     <p>A Customer Service Representative is responsible for providing high-quality support to customers by addressing inquiries, resolving issues, and delivering accurate information about products and services.</p>
+     <p>This role involves communicating with customers via phone, email, or chat, ensuring a positive and efficient customer experience.</p>
+     <p>Key responsibilities include identifying customer needs, troubleshooting problems, processing orders or requests, escalating complex issues when necessary, maintaining accurate records, and following up to ensure resolution and satisfaction.</p>`,
 
     `<p>You will receive 1 SONA research participation credit for completing this task.</p>
      <p>If you correctly identify the more desirable attribute in over 90% of the pairs, your reward will double and you will be awarded 2 SONA research participation credits in total.</p>`,
 
-    `<p>The adjective pairs will appear one pair at a time.</p>
-     <p>Use the <strong>S</strong> key to select the adjective on the left.</p>
-     <p>Use the <strong>K</strong> key to select the adjective on the right.</p>
-     <p>You will first complete 3 practice pairs.</p>`
+    `<p>The adjective pairs will appear on the screen one pair at a time, with one adjective to the left and one adjective to the right.</p>
+     <p>Use the <strong>S</strong> key on your keyboard to select the adjective on the left.</p>
+     <p>Use the <strong>K</strong> key on your keyboard to select the adjective on the right.</p>
+     <p>Before the main questionnaire, you will complete 3 practice pairs to familiarize yourself with the task and keyboard keys.</p>`
   ],
   show_clickable_nav: true
 });
@@ -249,32 +282,33 @@ const mainStimuli = [
   { pair_id: 25, word1: "Shy", word2: "Nervous", condition: "matched_negative" },
   { pair_id: 26, word1: "Withdrawn", word2: "Tense", condition: "matched_negative" },
 
-  { pair_id: 27, word1: "Agreeable", word2: "Tense", condition: "mixed" },
-  { pair_id: 28, word1: "Cooperative", word2: "Nervous", condition: "mixed" },
-  { pair_id: 29, word1: "Helpful", word2: "Anxious", condition: "mixed" },
-  { pair_id: 30, word1: "Kind", word2: "Insecure", condition: "mixed" },
-  { pair_id: 31, word1: "Trustful", word2: "Jealous", condition: "mixed" },
-  { pair_id: 32, word1: "Patient", word2: "Weepy", condition: "mixed" },
-  { pair_id: 33, word1: "Considerate", word2: "Moody", condition: "mixed" },
-  { pair_id: 34, word1: "Sympathetic", word2: "Irritable", condition: "mixed" },
-  { pair_id: 35, word1: "Warm", word2: "Envious", condition: "mixed" },
-  { pair_id: 36, word1: "Caring", word2: "Negligent", condition: "mixed" },
-  { pair_id: 37, word1: "Gentle", word2: "Inconsistent", condition: "mixed" },
-  { pair_id: 38, word1: "Responsible", word2: "Unreliable", condition: "mixed" },
-  { pair_id: 39, word1: "Thorough", word2: "Careless", condition: "mixed" },
-  { pair_id: 40, word1: "Harsh", word2: "Calm", condition: "mixed" },
-  { pair_id: 41, word1: "Rude", word2: "Friendly", condition: "mixed" },
-  { pair_id: 42, word1: "Hostile", word2: "Active", condition: "mixed" },
-  { pair_id: 43, word1: "Revengeful", word2: "Jolly", condition: "mixed" },
-  { pair_id: 44, word1: "Cold", word2: "Merry", condition: "mixed" },
-  { pair_id: 45, word1: "Antagonistic", word2: "Outgoing", condition: "mixed" },
-  { pair_id: 46, word1: "Ruthless", word2: "Lively", condition: "mixed" },
-  { pair_id: 47, word1: "Spiteful", word2: "Consistent", condition: "mixed" },
-  { pair_id: 48, word1: "Inefficient", word2: "Neat", condition: "mixed" },
-  { pair_id: 49, word1: "Impulsive", word2: "Organized", condition: "mixed" },
-  { pair_id: 50, word1: "Introverted", word2: "Efficient", condition: "mixed" },
-  { pair_id: 51, word1: "Shy", word2: "Precise", condition: "mixed" },
-  { pair_id: 52, word1: "Withdrawn", word2: "Polished", condition: "mixed" }
+  { pair_id: 27, word1: "Agreeable", word2: "Tense", condition: "mixed", more_desirable: "Agreeable" },
+  { pair_id: 28, word1: "Cooperative", word2: "Nervous", condition: "mixed", more_desirable: "Cooperative" },
+  { pair_id: 29, word1: "Helpful", word2: "Anxious", condition: "mixed", more_desirable: "Helpful" },
+  { pair_id: 30, word1: "Kind", word2: "Insecure", condition: "mixed", more_desirable: "Kind" },
+  { pair_id: 31, word1: "Trustful", word2: "Jealous", condition: "mixed", more_desirable: "Trustful" },
+  { pair_id: 32, word1: "Patient", word2: "Weepy", condition: "mixed", more_desirable: "Patient" },
+  { pair_id: 33, word1: "Considerate", word2: "Moody", condition: "mixed", more_desirable: "Considerate" },
+  { pair_id: 34, word1: "Sympathetic", word2: "Irritable", condition: "mixed", more_desirable: "Sympathetic" },
+  { pair_id: 35, word1: "Warm", word2: "Envious", condition: "mixed", more_desirable: "Warm" },
+  { pair_id: 36, word1: "Caring", word2: "Negligent", condition: "mixed", more_desirable: "Caring" },
+  { pair_id: 37, word1: "Gentle", word2: "Inconsistent", condition: "mixed", more_desirable: "Gentle" },
+  { pair_id: 38, word1: "Responsible", word2: "Unreliable", condition: "mixed", more_desirable: "Responsible" },
+  { pair_id: 39, word1: "Thorough", word2: "Careless", condition: "mixed", more_desirable: "Thorough" },
+
+  { pair_id: 40, word1: "Harsh", word2: "Calm", condition: "mixed", more_desirable: "Calm" },
+  { pair_id: 41, word1: "Rude", word2: "Friendly", condition: "mixed", more_desirable: "Friendly" },
+  { pair_id: 42, word1: "Hostile", word2: "Active", condition: "mixed", more_desirable: "Active" },
+  { pair_id: 43, word1: "Revengeful", word2: "Jolly", condition: "mixed", more_desirable: "Jolly" },
+  { pair_id: 44, word1: "Cold", word2: "Merry", condition: "mixed", more_desirable: "Merry" },
+  { pair_id: 45, word1: "Antagonistic", word2: "Outgoing", condition: "mixed", more_desirable: "Outgoing" },
+  { pair_id: 46, word1: "Ruthless", word2: "Lively", condition: "mixed", more_desirable: "Lively" },
+  { pair_id: 47, word1: "Spiteful", word2: "Consistent", condition: "mixed", more_desirable: "Consistent" },
+  { pair_id: 48, word1: "Inefficient", word2: "Neat", condition: "mixed", more_desirable: "Neat" },
+  { pair_id: 49, word1: "Impulsive", word2: "Organized", condition: "mixed", more_desirable: "Organized" },
+  { pair_id: 50, word1: "Introverted", word2: "Efficient", condition: "mixed", more_desirable: "Efficient" },
+  { pair_id: 51, word1: "Shy", word2: "Precise", condition: "mixed", more_desirable: "Precise" },
+  { pair_id: 52, word1: "Withdrawn", word2: "Polished", condition: "mixed", more_desirable: "Polished" }
 ];
 
 jsPsych.randomization.shuffle(mainStimuli.map(randomizePairSides)).forEach(item => {
