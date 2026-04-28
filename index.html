@@ -65,56 +65,32 @@ const return_url = "https://uteppsychology.az1.qualtrics.com/jfe/form/SV_6nxWdRP
 
 const jsPsych = initJsPsych({
   on_finish: function () {
-    const main_data = jsPsych.data.get().filter({ task: "main_forced_choice" });
-    const trials = main_data.values();
-    const n_main_trials = main_data.count();
+  const main_data = jsPsych.data.get().filter({ task: "main_forced_choice" });
+  const trials = main_data.values();
 
-    const pair_ids = trials.map(t => t.pair_id).join("|");
-    const conditions = trials.map(t => t.condition).join("|");
+  const final_url = new URL(return_url);
 
-    const word1s = trials.map(t => t.word1).join("|");
-    const word2s = trials.map(t => t.word2).join("|");
+  final_url.searchParams.set("sona_id", sona_id);
+  final_url.searchParams.set("completed", "1");
+  final_url.searchParams.set("n_main_trials", String(trials.length));
 
-    const left_words = trials.map(t => t.display_left).join("|");
-    const right_words = trials.map(t => t.display_right).join("|");
+  trials.forEach((t, index) => {
+    const n = index + 1;
 
-    const choices = trials.map(t => t.chosen).join("|");
-    const responses = trials.map(t => t.response).join("|");
-    const rts = trials.map(t => t.rt).join("|");
+    final_url.searchParams.set(`trial${n}_pair_id`, String(t.pair_id));
+    final_url.searchParams.set(`trial${n}_condition`, String(t.condition));
+    final_url.searchParams.set(`trial${n}_left_word`, String(t.display_left));
+    final_url.searchParams.set(`trial${n}_right_word`, String(t.display_right));
+    final_url.searchParams.set(`trial${n}_choice`, String(t.chosen));
+    final_url.searchParams.set(`trial${n}_response_key`, String(t.response));
+    final_url.searchParams.set(`trial${n}_rt`, String(t.rt));
+    final_url.searchParams.set(`trial${n}_chose_word1`, String(t.chose_word1));
+    final_url.searchParams.set(`trial${n}_chose_word2`, String(t.chose_word2));
+    final_url.searchParams.set(`trial${n}_is_flipped`, String(t.is_flipped));
+  });
 
-    const chose_word1 = trials.map(t => t.chose_word1).join("|");
-    const chose_word2 = trials.map(t => t.chose_word2).join("|");
-    const chose_more_desirable = trials.map(t => t.chose_more_desirable).join("|");
-
-    const is_flipped = trials.map(t => t.is_flipped).join("|");
-
-    const final_url = new URL(return_url);
-
-    final_url.searchParams.set("sona_id", sona_id);
-    final_url.searchParams.set("completed", "1");
-    final_url.searchParams.set("n_main_trials", String(n_main_trials));
-
-    final_url.searchParams.set("pair_ids", pair_ids);
-    final_url.searchParams.set("conditions", conditions);
-
-    final_url.searchParams.set("word1s", word1s);
-    final_url.searchParams.set("word2s", word2s);
-
-    final_url.searchParams.set("left_words", left_words);
-    final_url.searchParams.set("right_words", right_words);
-
-    final_url.searchParams.set("choices", choices);
-    final_url.searchParams.set("responses", responses);
-    final_url.searchParams.set("rts", rts);
-
-    final_url.searchParams.set("chose_word1", chose_word1);
-    final_url.searchParams.set("chose_word2", chose_word2);
-    final_url.searchParams.set("chose_more_desirable", chose_more_desirable);
-
-    final_url.searchParams.set("is_flipped", is_flipped);
-
-    window.location.assign(final_url.toString());
-  }
+  window.location.assign(final_url.toString());
+}
 });
 
 const timeline = [];
