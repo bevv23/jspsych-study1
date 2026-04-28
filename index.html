@@ -12,40 +12,43 @@
   <script src="https://unpkg.com/@jspsych/plugin-instructions@2.1.0"></script>
 
   <style>
-    body { 
-      background: #ffffff; 
-    }
+body{
+  background:#ffffff;
+}
 
-    .trial-wrapper { 
-      max-width: 1000px; 
-      margin: 0 auto; 
-      text-align: center; 
-    }
+.trial-wrapper{
+  width:1100px;
+  margin:0 auto;
+  text-align:center;
+}
 
-    .pair-row { 
-      display: flex; 
-      justify-content: space-around; 
-      margin-top: 80px; 
-    }
+.pair-row{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap:320px;
+  align-items:start;
+  margin-top:120px;
+}
 
-    .pair-option { 
-      width: 40%; 
-    }
+.pair-option{
+  width:100%;
+}
 
-    .key-label { 
-      font-size: 20px; 
-      margin-bottom: 14px; 
-      font-weight: bold; 
-    }
+.key-label{
+  font-size:22px;
+  font-weight:bold;
+  margin-bottom:18px;
+}
 
-    .word-label { 
-      font-size: 42px; 
-    }
+.word-label{
+  font-size:42px;
+  white-space:nowrap;
+}
 
-    .fixation { 
-      font-size: 56px; 
-    }
-  </style>
+.fixation{
+  font-size:56px;
+}
+</style>
 </head>
 
 <body></body>
