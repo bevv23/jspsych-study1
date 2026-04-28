@@ -7,58 +7,64 @@
 
 <script src="https://unpkg.com/jspsych@8.2.2"></script>
 <link href="https://unpkg.com/jspsych@8.2.2/css/jspsych.css" rel="stylesheet">
-
 <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.1.0"></script>
 <script src="https://unpkg.com/@jspsych/plugin-instructions@2.1.0"></script>
 
 <style>
-body { background: #222; }
-
-.trial-wrapper {
-  width: 1000px;
-  margin: 0 auto;
-  text-align: center;
+body{
+  background:#ffffff;
 }
 
-.pair-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  column-gap: 150px;
-  align-items: start;
-  margin-top: 110px;
+.trial-wrapper{
+  width:1000px;
+  margin:0 auto;
+  text-align:center;
 }
 
-.pair-option { width: 100%; }
-
-.key-label {
-  font-size: 22px;
-  font-weight: bold;
-  margin-bottom: 18px;
+.pair-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  column-gap:150px;
+  align-items:start;
+  margin-top:110px;
 }
 
-.word-label {
-  font-size: 42px;
-  white-space: nowrap;
+.pair-option{
+  width:100%;
 }
 
-.practice-question {
-  font-size: 24px;
-  margin-bottom: 30px;
+.key-label{
+  font-size:22px;
+  font-weight:bold;
+  margin-bottom:18px;
 }
 
-.practice-subtext {
-  font-size: 18px;
-  margin-bottom: 40px;
+.word-label{
+  font-size:42px;
+  white-space:nowrap;
 }
 
-.fixation { font-size: 56px; }
+.practice-question{
+  font-size:24px;
+  margin-bottom:30px;
+}
+
+.practice-subtext{
+  font-size:18px;
+  margin-bottom:40px;
+}
+
+.fixation{
+  font-size:56px;
+}
 </style>
 </head>
 
 <body></body>
 
 <script>
-function getUrlParam(param) {
+
+function getUrlParam(param){
   const urlParams = new URLSearchParams(window.location.search);
   return urlParams.get(param);
 }
@@ -67,31 +73,26 @@ const sona_id = getUrlParam("sona_id") || "NO_SONA_ID";
 const return_url = "https://uteppsychology.az1.qualtrics.com/jfe/form/SV_6nxWdRPgkB7ftMG";
 
 const jsPsych = initJsPsych({
-  on_finish: function () {
-    const main_data = jsPsych.data.get().filter({ task: "main_forced_choice" });
+
+  on_finish:function(){
+
+    const main_data = jsPsych.data.get().filter({task:"main_forced_choice"});
     const trials = main_data.values();
 
-    function joinField(field) {
+    function joinField(field){
       return trials.map(t => t[field]).join("|");
     }
 
     const final_url = new URL(return_url);
 
     final_url.searchParams.set("sona_id", sona_id);
-    final_url.searchParams.set("completed", "1");
+    final_url.searchParams.set("completed","1");
     final_url.searchParams.set("n_main_trials", String(trials.length));
 
     final_url.searchParams.set("trial_order", joinField("pair_id"));
     final_url.searchParams.set("conditions", joinField("condition"));
-    final_url.searchParams.set("word1s", joinField("word1"));
-    final_url.searchParams.set("word2s", joinField("word2"));
-    final_url.searchParams.set("left_words", joinField("display_left"));
-    final_url.searchParams.set("right_words", joinField("display_right"));
     final_url.searchParams.set("key_pressed", joinField("response"));
-    final_url.searchParams.set("chosen_actual", joinField("chosen_actual"));
     final_url.searchParams.set("chosen_standardized", joinField("chosen_standardized"));
-    final_url.searchParams.set("chose_word1", joinField("chose_word1"));
-    final_url.searchParams.set("chose_word2", joinField("chose_word2"));
     final_url.searchParams.set("chose_more_desirable", joinField("chose_more_desirable"));
     final_url.searchParams.set("rts", joinField("rt"));
     final_url.searchParams.set("is_flipped", joinField("is_flipped"));
@@ -102,8 +103,12 @@ const jsPsych = initJsPsych({
 
 const timeline = [];
 
-function randomizePairSides(pair) {
+/* ---------------- RANDOMIZATION ---------------- */
+
+function randomizePairSides(pair){
+
   const flip = Math.random() < 0.5;
+
   return {
     ...pair,
     display_left: flip ? pair.word2 : pair.word1,
@@ -112,22 +117,30 @@ function randomizePairSides(pair) {
   };
 }
 
-function makeTrial(item, taskLabel, isPractice = false) {
+/* ---------------- TRIAL BUILDER ---------------- */
+
+function makeTrial(item, taskLabel, isPractice=false){
+
   return {
+
     type: jsPsychHtmlKeyboardResponse,
 
     stimulus: `
       <div class="trial-wrapper">
+
         ${isPractice ? `
-          <div class="practice-question">
-            Which personality adjective below is more desirable in someone applying for the Customer Service Representative job?
-          </div>
-          <div class="practice-subtext">
-            Press <strong>S</strong> for the adjective on the left and <strong>K</strong> for the adjective on the right.
-          </div>
+        <div class="practice-question">
+          Which personality adjective below is more desirable in someone applying for the Customer Service Representative job?
+        </div>
+
+        <div class="practice-subtext">
+          Press <strong>S</strong> for the adjective on the left and
+          <strong>K</strong> for the adjective on the right.
+        </div>
         ` : ``}
 
         <div class="pair-row">
+
           <div class="pair-option">
             <div class="key-label">S</div>
             <div class="word-label">${item.display_left}</div>
@@ -137,45 +150,39 @@ function makeTrial(item, taskLabel, isPractice = false) {
             <div class="key-label">K</div>
             <div class="word-label">${item.display_right}</div>
           </div>
+
         </div>
+
       </div>
     `,
 
-    choices: ["s", "k"],
+    choices:["s","k"],
 
-    data: {
-      task: taskLabel,
-      sona_id: sona_id,
-      pair_id: item.pair_id,
-      condition: item.condition,
-      word1: item.word1,
-      word2: item.word2,
-      display_left: item.display_left,
-      display_right: item.display_right,
-      is_flipped: item.is_flipped
+    data:{
+      task:taskLabel,
+      pair_id:item.pair_id,
+      condition:item.condition,
+      word1:item.word1,
+      word2:item.word2,
+      is_flipped:item.is_flipped
     },
 
-    on_finish: function(data) {
-      const chosen = data.response === "s" ? item.display_left : item.display_right;
+    on_finish:function(data){
 
-      data.chosen_actual = chosen;
+      const chosen =
+        data.response === "s"
+        ? item.display_left
+        : item.display_right;
 
-      if (chosen === item.word1) {
+      if(chosen === item.word1){
         data.chosen_standardized = "word1";
-        data.chose_word1 = 1;
-        data.chose_word2 = 0;
-      } else if (chosen === item.word2) {
-        data.chosen_standardized = "word2";
-        data.chose_word1 = 0;
-        data.chose_word2 = 1;
       } else {
-        data.chosen_standardized = "";
-        data.chose_word1 = "";
-        data.chose_word2 = "";
+        data.chosen_standardized = "word2";
       }
 
-      if (item.condition === "mixed") {
-        data.chose_more_desirable = chosen === item.more_desirable ? 1 : 0;
+      if(item.condition === "mixed"){
+        data.chose_more_desirable =
+          chosen === item.more_desirable ? 1 : 0;
       } else {
         data.chose_more_desirable = "";
       }
@@ -183,116 +190,78 @@ function makeTrial(item, taskLabel, isPractice = false) {
   };
 }
 
+/* ---------------- FIXATION ---------------- */
+
 const fixation = {
   type: jsPsychHtmlKeyboardResponse,
-  stimulus: '<div class="fixation">+</div>',
-  choices: "NO_KEYS",
-  trial_duration: 500
+  stimulus:'<div class="fixation">+</div>',
+  choices:"NO_KEYS",
+  trial_duration:500
 };
 
+/* ---------------- NEW FIRST PAGE ---------------- */
+
 timeline.push({
   type: jsPsychInstructions,
   pages: [
+    '<div style="max-width:760px;margin:0 auto;text-align:left;color:black;font-family:Arial,sans-serif;line-height:1.35;font-size:17px;">' +
 
-`
-<div style="
-max-width:760px;
-margin:0 auto;
-text-align:left;
-color:black;
-font-family:Arial, sans-serif;
-line-height:1.35;
-font-size:17px;
-">
+    '<div style="text-align:center;font-weight:bold;font-size:28px;margin-bottom:28px;">INSTRUCTIONS</div>' +
 
-<div style="text-align:center; font-weight:bold; font-size:28px; margin-bottom:28px;">
-INSTRUCTIONS
-</div>
+    '<p>Each job requires a specific skill set but also specific personality attributes to be performed successfully. Accordingly, in choosing the best job candidate, hiring managers are often assessing if applicants possess the required, desirable personality attributes for the job they applied for.</p>' +
 
-<p>
-Each job requires a specific skill set but also specific personality attributes to be performed successfully.
-Accordingly, in choosing the best job candidate, hiring managers are often assessing if applicants possess the required,
-desirable personality attributes for the job they applied for.
-</p>
+    '<p>In this study, you will be presented with 52 pairs of adjectives reflecting various personality attributes. For each pair, your task will be to identify the more desirable personality attribute in a person applying for a Customer Service Representative job. Please read a brief job description for this job carefully.</p>' +
 
-<p>
-In this study, you will be presented with 52 pairs of adjectives reflecting various personality attributes.
-For each pair, your task will be to identify the more desirable personality attribute in a person applying for a
-Customer Service Representative job.
-Please read a brief job description for this job carefully.
-</p>
+    '<div style="border:1px solid black;padding:14px;margin:24px 0;font-style:italic;">' +
+    '<div style="font-weight:bold;margin-bottom:12px;">Customer Service Representative job description</div>' +
 
-<div style="
-border:1px solid white;
-padding:14px;
-margin:24px 0;
-font-style:italic;
-">
+    '<p>Customer Service Representative is responsible for providing high-quality support to customers by addressing inquiries, resolving issues, and delivering accurate information about products and services. This role involves communicating with customers via phone, email, or chat, ensuring a positive and efficient customer experience.</p>' +
 
-<div style="font-weight:bold; margin-bottom:12px;">
-Customer Service Representative job description
-</div>
+    '<p>Key responsibilities include identifying customer needs, troubleshooting problems, processing orders or requests, and escalating complex issues when necessary. The representative maintains detailed and accurate records of customer interactions and follows up to ensure resolution and satisfaction.</p>' +
 
-<p>
-Customer Service Representative is responsible for providing high-quality support to customers by addressing inquiries,
-resolving issues, and delivering accurate information about products and services.
-This role involves communicating with customers via phone, email, or chat, ensuring a positive and efficient customer experience.
-</p>
+    '</div>' +
 
-<p>
-Key responsibilities include identifying customer needs, troubleshooting problems, processing orders or requests,
-and escalating complex issues when necessary.
-The representative maintains detailed and accurate records of customer interactions and follows up to ensure resolution and satisfaction.
-</p>
+    '<p>You will receive 1 SONA research participation credit for completing this task. If you correctly identify the more desirable attribute in over 90% of the pairs, your reward will double and you will be awarded 2 SONA research participation credits in total.</p>' +
 
-</div>
+    '<p>The adjective pairs will appear on the screen one pair at a time, with one adjective to the left and one to the right. Use the “S” key on your keyboard to select the one on the left and the “K” key on your keyboard to select the one on the right.</p>' +
 
-<p>
-You will receive 1 SONA research participation credit for completing this task.
-If you correctly identify the more desirable attribute in over 90% of the pairs, your reward will double and you will be awarded 2 SONA research participation credits in total.
-</p>
+    '<p>Before you proceed to the main questionnaire, you will be presented with 3 practice pairs to familiarize yourself with the task and get used to keyboard keys.</p>' +
 
-<p>
-The adjective pairs will appear on the screen one pair at the time, with one adjective to the left and one to the right.
-Use the “S” key on your keyboard to select the one on the left and the “K” key on your keyboard to select one to the right.
-</p>
-
-<p>
-Before you proceed to the main questionnaire, you will be presented with 3 practice pairs to familiarize yourself with the task and get used to keyboard keys.
-</p>
-
-</div>
-`
-
+    '</div>'
   ],
-  show_clickable_nav: true,
-  button_label_next: "->"
+  show_clickable_nav:true,
+  button_label_next:"->"
 });
+
+/* ---------------- PRACTICE ---------------- */
+
 const practiceStimuli = [
-  { pair_id: "P1", word1: "Kind", word2: "Reckless", condition: "practice" },
-  { pair_id: "P2", word1: "Caring", word2: "Thorough", condition: "practice" },
-  { pair_id: "P3", word1: "Harsh", word2: "Careless", condition: "practice" }
+ {pair_id:"P1", word1:"Kind", word2:"Reckless", condition:"practice"},
+ {pair_id:"P2", word1:"Caring", word2:"Thorough", condition:"practice"},
+ {pair_id:"P3", word1:"Harsh", word2:"Careless", condition:"practice"}
 ];
 
-practiceStimuli.map(randomizePairSides).forEach(item => {
+practiceStimuli.map(randomizePairSides).forEach(item=>{
   timeline.push(fixation);
-  timeline.push(makeTrial(item, "practice_forced_choice", true));
+  timeline.push(makeTrial(item,"practice_forced_choice",true));
 });
+
+/* ---------------- MAIN START PAGE ---------------- */
 
 timeline.push({
   type: jsPsychInstructions,
-  pages: [
-    `<p>You have finished the practice trials.</p>
-     <p>The main task will begin next.</p>
-     <p>Please respond as quickly and accurately as possible.</p>`
+  pages:[
+    '<p>You have finished the practice trials.</p><p>The main task will begin next.</p><p>Please respond as quickly and accurately as possible.</p>'
   ],
-  show_clickable_nav: true
+  show_clickable_nav:true
 });
 
+/* ---------------- MAIN TRIALS ---------------- */
+
 const mainStimuli = [
-  { pair_id: 1, word1: "Agreeable", word2: "Polished", condition: "matched_positive" },
-  { pair_id: 2, word1: "Cooperative", word2: "Precise", condition: "matched_positive" },
-  { pair_id: 3, word1: "Helpful", word2: "Efficient", condition: "matched_positive" },
+  { pair_id:1, word1:"Agreeable", word2:"Polished", condition:"matched_positive" },
+  { pair_id:2, word1:"Cooperative", word2:"Precise", condition:"matched_positive" },
+  { pair_id:3, word1:"Helpful", word2:"Efficient", condition:"matched_positive" }
   { pair_id: 4, word1: "Kind", word2: "Organized", condition: "matched_positive" },
   { pair_id: 5, word1: "Trustful", word2: "Neat", condition: "matched_positive" },
   { pair_id: 6, word1: "Patient", word2: "Consistent", condition: "matched_positive" },
