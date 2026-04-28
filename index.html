@@ -1,53 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Response Latencies Study 2</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Response Latencies Study 2</title>
 
-  <script src="https://unpkg.com/jspsych@8.2.2"></script>
-  <link href="https://unpkg.com/jspsych@8.2.2/css/jspsych.css" rel="stylesheet" />
+<script src="https://unpkg.com/jspsych@8.2.2"></script>
+<link href="https://unpkg.com/jspsych@8.2.2/css/jspsych.css" rel="stylesheet">
 
-  <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.1.0"></script>
-  <script src="https://unpkg.com/@jspsych/plugin-instructions@2.1.0"></script>
+<script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.1.0"></script>
+<script src="https://unpkg.com/@jspsych/plugin-instructions@2.1.0"></script>
 
- <style>
-body{
-  background:#ffffff;
-}
+<style>
+body { background:#ffffff; }
 
-.trial-wrapper{
+.trial-wrapper {
   width:1000px;
   margin:0 auto;
   text-align:center;
 }
 
-.pair-row{
+.pair-row {
   display:grid;
-  grid-template-columns: 1fr 1fr;
-  column-gap:170px;
+  grid-template-columns:1fr 1fr;
+  column-gap:150px;
   align-items:start;
-  margin-top:120px;
+  margin-top:110px;
 }
 
-.pair-option{
-  width:100%;
-}
+.pair-option { width:100%; }
 
-.key-label{
+.key-label {
   font-size:22px;
   font-weight:bold;
   margin-bottom:18px;
 }
 
-.word-label{
+.word-label {
   font-size:42px;
   white-space:nowrap;
 }
 
-.fixation{
-  font-size:56px;
+.practice-question {
+  font-size:24px;
+  margin-bottom:30px;
 }
+
+.practice-subtext {
+  font-size:18px;
+  margin-bottom:40px;
+}
+
+.fixation { font-size:56px; }
 </style>
 </head>
 
@@ -60,44 +64,45 @@ function getUrlParam(param) {
 }
 
 const sona_id = getUrlParam("sona_id") || "NO_SONA_ID";
-
 const return_url = "https://uteppsychology.az1.qualtrics.com/jfe/form/SV_6nxWdRPgkB7ftMG";
 
 const jsPsych = initJsPsych({
   on_finish: function () {
-  const main_data = jsPsych.data.get().filter({ task: "main_forced_choice" });
-  const trials = main_data.values();
+    const main_data = jsPsych.data.get().filter({ task: "main_forced_choice" });
+    const trials = main_data.values();
 
-  const final_url = new URL(return_url);
+    const final_url = new URL(return_url);
 
-  final_url.searchParams.set("sona_id", sona_id);
-  final_url.searchParams.set("completed", "1");
-  final_url.searchParams.set("n_main_trials", String(trials.length));
+    final_url.searchParams.set("sona_id", sona_id);
+    final_url.searchParams.set("completed", "1");
+    final_url.searchParams.set("n_main_trials", String(trials.length));
 
-  trials.forEach((t, index) => {
-    const n = index + 1;
+    trials.forEach((t, index) => {
+      const n = index + 1;
 
-    final_url.searchParams.set(`trial${n}_pair_id`, String(t.pair_id));
-    final_url.searchParams.set(`trial${n}_condition`, String(t.condition));
-    final_url.searchParams.set(`trial${n}_left_word`, String(t.display_left));
-    final_url.searchParams.set(`trial${n}_right_word`, String(t.display_right));
-    final_url.searchParams.set(`trial${n}_choice`, String(t.chosen));
-    final_url.searchParams.set(`trial${n}_response_key`, String(t.response));
-    final_url.searchParams.set(`trial${n}_rt`, String(t.rt));
-    final_url.searchParams.set(`trial${n}_chose_word1`, String(t.chose_word1));
-    final_url.searchParams.set(`trial${n}_chose_word2`, String(t.chose_word2));
-    final_url.searchParams.set(`trial${n}_is_flipped`, String(t.is_flipped));
-  });
+      final_url.searchParams.set(`trial${n}_pair_id`, String(t.pair_id));
+      final_url.searchParams.set(`trial${n}_condition`, String(t.condition));
+      final_url.searchParams.set(`trial${n}_word1`, String(t.word1));
+      final_url.searchParams.set(`trial${n}_word2`, String(t.word2));
+      final_url.searchParams.set(`trial${n}_left_word`, String(t.display_left));
+      final_url.searchParams.set(`trial${n}_right_word`, String(t.display_right));
+      final_url.searchParams.set(`trial${n}_choice`, String(t.chosen));
+      final_url.searchParams.set(`trial${n}_response_key`, String(t.response));
+      final_url.searchParams.set(`trial${n}_rt`, String(t.rt));
+      final_url.searchParams.set(`trial${n}_chose_word1`, String(t.chose_word1));
+      final_url.searchParams.set(`trial${n}_chose_word2`, String(t.chose_word2));
+      final_url.searchParams.set(`trial${n}_chose_more_desirable`, String(t.chose_more_desirable));
+      final_url.searchParams.set(`trial${n}_is_flipped`, String(t.is_flipped));
+    });
 
-  window.location.assign(final_url.toString());
-}
+    window.location.assign(final_url.toString());
+  }
 });
 
 const timeline = [];
 
 function randomizePairSides(pair) {
   const flip = Math.random() < 0.5;
-
   return {
     ...pair,
     display_left: flip ? pair.word2 : pair.word1,
@@ -106,12 +111,21 @@ function randomizePairSides(pair) {
   };
 }
 
-function makeTrial(item, taskLabel) {
+function makeTrial(item, taskLabel, isPractice = false) {
   return {
     type: jsPsychHtmlKeyboardResponse,
 
     stimulus: `
       <div class="trial-wrapper">
+        ${isPractice ? `
+          <div class="practice-question">
+            Which personality adjective below is more desirable in someone applying for the Customer Service Representative job?
+          </div>
+          <div class="practice-subtext">
+            Press <strong>S</strong> for the adjective on the left and <strong>K</strong> for the adjective on the right.
+          </div>
+        ` : ``}
+
         <div class="pair-row">
           <div class="pair-option">
             <div class="key-label">S</div>
@@ -131,16 +145,12 @@ function makeTrial(item, taskLabel) {
     data: {
       task: taskLabel,
       sona_id: sona_id,
-
       pair_id: item.pair_id,
       condition: item.condition,
-
       word1: item.word1,
       word2: item.word2,
-
       display_left: item.display_left,
       display_right: item.display_right,
-
       is_flipped: item.is_flipped
     },
 
@@ -170,9 +180,42 @@ const fixation = {
 timeline.push({
   type: jsPsychInstructions,
   pages: [
-    "<p>Welcome! In this task, you will choose which adjective is more desirable for a Customer Service Representative.</p>",
-    "<p>On each trial, two adjectives will appear on the screen.</p><p>Press <strong>S</strong> to choose the adjective on the left.</p><p>Press <strong>K</strong> to choose the adjective on the right.</p>",
-    "<p>Please respond as accurately and quickly as possible.</p>"
+    `<p>Each job requires a specific skill set but also specific personality attributes to be performed successfully.</p>
+     <p>In this study, you will be presented with pairs of adjectives reflecting personality attributes.</p>
+     <p>For each pair, your task is to identify the more desirable personality attribute in a person applying for a Customer Service Representative job.</p>`,
+
+    `<p><strong>Customer Service Representative job description</strong></p>
+     <p>A Customer Service Representative provides high-quality support to customers by addressing inquiries, resolving issues, and delivering accurate information about products and services.</p>
+     <p>This role involves communicating with customers by phone, email, or chat, identifying customer needs, troubleshooting problems, processing requests, and ensuring customer satisfaction.</p>`,
+
+    `<p>You will receive 1 SONA research participation credit for completing this task.</p>
+     <p>If you correctly identify the more desirable attribute in over 90% of the pairs, your reward will double and you will be awarded 2 SONA research participation credits in total.</p>`,
+
+    `<p>The adjective pairs will appear one pair at a time.</p>
+     <p>Use the <strong>S</strong> key to select the adjective on the left.</p>
+     <p>Use the <strong>K</strong> key to select the adjective on the right.</p>
+     <p>You will first complete 3 practice pairs.</p>`
+  ],
+  show_clickable_nav: true
+});
+
+const practiceStimuli = [
+  { pair_id: "P1", word1: "Kind", word2: "Reckless", condition: "practice" },
+  { pair_id: "P2", word1: "Caring", word2: "Thorough", condition: "practice" },
+  { pair_id: "P3", word1: "Harsh", word2: "Careless", condition: "practice" }
+];
+
+practiceStimuli.map(randomizePairSides).forEach(item => {
+  timeline.push(fixation);
+  timeline.push(makeTrial(item, "practice_forced_choice", true));
+});
+
+timeline.push({
+  type: jsPsychInstructions,
+  pages: [
+    `<p>You have finished the practice trials.</p>
+     <p>The main task will begin next.</p>
+     <p>Please respond as quickly and accurately as possible.</p>`
   ],
   show_clickable_nav: true
 });
@@ -204,14 +247,39 @@ const mainStimuli = [
   { pair_id: 23, word1: "Impulsive", word2: "Insecure", condition: "matched_negative" },
   { pair_id: 24, word1: "Introverted", word2: "Anxious", condition: "matched_negative" },
   { pair_id: 25, word1: "Shy", word2: "Nervous", condition: "matched_negative" },
-  { pair_id: 26, word1: "Withdrawn", word2: "Tense", condition: "matched_negative" }
+  { pair_id: 26, word1: "Withdrawn", word2: "Tense", condition: "matched_negative" },
+
+  { pair_id: 27, word1: "Agreeable", word2: "Tense", condition: "mixed" },
+  { pair_id: 28, word1: "Cooperative", word2: "Nervous", condition: "mixed" },
+  { pair_id: 29, word1: "Helpful", word2: "Anxious", condition: "mixed" },
+  { pair_id: 30, word1: "Kind", word2: "Insecure", condition: "mixed" },
+  { pair_id: 31, word1: "Trustful", word2: "Jealous", condition: "mixed" },
+  { pair_id: 32, word1: "Patient", word2: "Weepy", condition: "mixed" },
+  { pair_id: 33, word1: "Considerate", word2: "Moody", condition: "mixed" },
+  { pair_id: 34, word1: "Sympathetic", word2: "Irritable", condition: "mixed" },
+  { pair_id: 35, word1: "Warm", word2: "Envious", condition: "mixed" },
+  { pair_id: 36, word1: "Caring", word2: "Negligent", condition: "mixed" },
+  { pair_id: 37, word1: "Gentle", word2: "Inconsistent", condition: "mixed" },
+  { pair_id: 38, word1: "Responsible", word2: "Unreliable", condition: "mixed" },
+  { pair_id: 39, word1: "Thorough", word2: "Careless", condition: "mixed" },
+  { pair_id: 40, word1: "Harsh", word2: "Calm", condition: "mixed" },
+  { pair_id: 41, word1: "Rude", word2: "Friendly", condition: "mixed" },
+  { pair_id: 42, word1: "Hostile", word2: "Active", condition: "mixed" },
+  { pair_id: 43, word1: "Revengeful", word2: "Jolly", condition: "mixed" },
+  { pair_id: 44, word1: "Cold", word2: "Merry", condition: "mixed" },
+  { pair_id: 45, word1: "Antagonistic", word2: "Outgoing", condition: "mixed" },
+  { pair_id: 46, word1: "Ruthless", word2: "Lively", condition: "mixed" },
+  { pair_id: 47, word1: "Spiteful", word2: "Consistent", condition: "mixed" },
+  { pair_id: 48, word1: "Inefficient", word2: "Neat", condition: "mixed" },
+  { pair_id: 49, word1: "Impulsive", word2: "Organized", condition: "mixed" },
+  { pair_id: 50, word1: "Introverted", word2: "Efficient", condition: "mixed" },
+  { pair_id: 51, word1: "Shy", word2: "Precise", condition: "mixed" },
+  { pair_id: 52, word1: "Withdrawn", word2: "Polished", condition: "mixed" }
 ];
 
-const randomized = jsPsych.randomization.shuffle(mainStimuli.map(randomizePairSides));
-
-randomized.forEach(item => {
+jsPsych.randomization.shuffle(mainStimuli.map(randomizePairSides)).forEach(item => {
   timeline.push(fixation);
-  timeline.push(makeTrial(item, "main_forced_choice"));
+  timeline.push(makeTrial(item, "main_forced_choice", false));
 });
 
 timeline.push({
