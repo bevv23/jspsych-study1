@@ -12,15 +12,39 @@
   <script src="https://unpkg.com/@jspsych/plugin-instructions@2.1.0"></script>
 
   <style>
-    body { background: #ffffff; }
-    .trial-wrapper { max-width: 1000px; margin: 0 auto; text-align: center; }
-    .trial-question { font-size: 24px; margin-bottom: 18px; }
-    .trial-subtext { font-size: 17px; margin-bottom: 50px; }
-    .pair-row { display: flex; justify-content: space-around; margin-top: 30px; }
-    .pair-option { width: 40%; }
-    .key-label { font-size: 18px; margin-bottom: 10px; font-weight: bold; }
-    .word-label { font-size: 36px; }
-    .fixation { font-size: 56px; }
+    body { 
+      background: #ffffff; 
+    }
+
+    .trial-wrapper { 
+      max-width: 1000px; 
+      margin: 0 auto; 
+      text-align: center; 
+    }
+
+    .pair-row { 
+      display: flex; 
+      justify-content: space-around; 
+      margin-top: 80px; 
+    }
+
+    .pair-option { 
+      width: 40%; 
+    }
+
+    .key-label { 
+      font-size: 20px; 
+      margin-bottom: 14px; 
+      font-weight: bold; 
+    }
+
+    .word-label { 
+      font-size: 42px; 
+    }
+
+    .fixation { 
+      font-size: 56px; 
+    }
   </style>
 </head>
 
@@ -33,29 +57,65 @@ function getUrlParam(param) {
 }
 
 const sona_id = getUrlParam("sona_id") || "NO_SONA_ID";
+
 const return_url = "https://uteppsychology.az1.qualtrics.com/jfe/form/SV_6nxWdRPgkB7ftMG";
 
 const jsPsych = initJsPsych({
   on_finish: function () {
     const main_data = jsPsych.data.get().filter({ task: "main_forced_choice" });
+    const trials = main_data.values();
     const n_main_trials = main_data.count();
-    const last_trial = main_data.last(1).values()[0] || {};
+
+    const pair_ids = trials.map(t => t.pair_id).join("|");
+    const conditions = trials.map(t => t.condition).join("|");
+
+    const word1s = trials.map(t => t.word1).join("|");
+    const word2s = trials.map(t => t.word2).join("|");
+
+    const left_words = trials.map(t => t.display_left).join("|");
+    const right_words = trials.map(t => t.display_right).join("|");
+
+    const choices = trials.map(t => t.chosen).join("|");
+    const responses = trials.map(t => t.response).join("|");
+    const rts = trials.map(t => t.rt).join("|");
+
+    const chose_word1 = trials.map(t => t.chose_word1).join("|");
+    const chose_word2 = trials.map(t => t.chose_word2).join("|");
+    const chose_more_desirable = trials.map(t => t.chose_more_desirable).join("|");
+
+    const is_flipped = trials.map(t => t.is_flipped).join("|");
 
     const final_url = new URL(return_url);
+
     final_url.searchParams.set("sona_id", sona_id);
     final_url.searchParams.set("completed", "1");
     final_url.searchParams.set("n_main_trials", String(n_main_trials));
-    final_url.searchParams.set("last_choice", String(last_trial.chosen || ""));
-    final_url.searchParams.set("last_rt", String(last_trial.rt || ""));
-    final_url.searchParams.set("last_pair_id", String(last_trial.pair_id || ""));
-    final_url.searchParams.set("last_is_flipped", String(last_trial.is_flipped || ""));
+
+    final_url.searchParams.set("pair_ids", pair_ids);
+    final_url.searchParams.set("conditions", conditions);
+
+    final_url.searchParams.set("word1s", word1s);
+    final_url.searchParams.set("word2s", word2s);
+
+    final_url.searchParams.set("left_words", left_words);
+    final_url.searchParams.set("right_words", right_words);
+
+    final_url.searchParams.set("choices", choices);
+    final_url.searchParams.set("responses", responses);
+    final_url.searchParams.set("rts", rts);
+
+    final_url.searchParams.set("chose_word1", chose_word1);
+    final_url.searchParams.set("chose_word2", chose_word2);
+    final_url.searchParams.set("chose_more_desirable", chose_more_desirable);
+
+    final_url.searchParams.set("is_flipped", is_flipped);
 
     window.location.assign(final_url.toString());
   }
 });
+
 const timeline = [];
 
-// RANDOMIZE HORIZONTAL
 function randomizePairSides(pair) {
   const flip = Math.random() < 0.5;
 
@@ -67,20 +127,12 @@ function randomizePairSides(pair) {
   };
 }
 
-// TRIAL
 function makeTrial(item, taskLabel) {
   return {
     type: jsPsychHtmlKeyboardResponse,
+
     stimulus: `
       <div class="trial-wrapper">
-        <div class="trial-question">
-          Which adjective is more desirable for a Customer Service Representative?
-        </div>
-
-        <div class="trial-subtext">
-          Press S for left, K for right
-        </div>
-
         <div class="pair-row">
           <div class="pair-option">
             <div class="key-label">S</div>
@@ -94,15 +146,25 @@ function makeTrial(item, taskLabel) {
         </div>
       </div>
     `,
+
     choices: ["s", "k"],
+
     data: {
       task: taskLabel,
+      sona_id: sona_id,
+
       pair_id: item.pair_id,
       condition: item.condition,
+
       word1: item.word1,
       word2: item.word2,
+
+      display_left: item.display_left,
+      display_right: item.display_right,
+
       is_flipped: item.is_flipped
     },
+
     on_finish: function(data) {
       const chosen = data.response === "s" ? item.display_left : item.display_right;
 
@@ -119,7 +181,6 @@ function makeTrial(item, taskLabel) {
   };
 }
 
-// FIXATION
 const fixation = {
   type: jsPsychHtmlKeyboardResponse,
   stimulus: '<div class="fixation">+</div>',
@@ -127,21 +188,20 @@ const fixation = {
   trial_duration: 500
 };
 
-// INSTRUCTIONS
 timeline.push({
   type: jsPsychInstructions,
   pages: [
-    "<p>Welcome! You will choose the more desirable adjective.</p>",
-    "<p>Press S for left, K for right.</p>"
+    "<p>Welcome! In this task, you will choose which adjective is more desirable for a Customer Service Representative.</p>",
+    "<p>On each trial, two adjectives will appear on the screen.</p><p>Press <strong>S</strong> to choose the adjective on the left.</p><p>Press <strong>K</strong> to choose the adjective on the right.</p>",
+    "<p>Please respond as accurately and quickly as possible.</p>"
   ],
   show_clickable_nav: true
 });
 
-// MAIN STIMULI 
 const mainStimuli = [
   { pair_id: 1, word1: "Agreeable", word2: "Polished", condition: "matched_positive" },
   { pair_id: 2, word1: "Cooperative", word2: "Precise", condition: "matched_positive" },
-  { pair_id: 3, word1: "Helpful", word2: "Efficient", condition: "matched_positive" }, 
+  { pair_id: 3, word1: "Helpful", word2: "Efficient", condition: "matched_positive" },
   { pair_id: 4, word1: "Kind", word2: "Organized", condition: "matched_positive" },
   { pair_id: 5, word1: "Trustful", word2: "Neat", condition: "matched_positive" },
   { pair_id: 6, word1: "Patient", word2: "Consistent", condition: "matched_positive" },
@@ -165,11 +225,9 @@ const mainStimuli = [
   { pair_id: 23, word1: "Impulsive", word2: "Insecure", condition: "matched_negative" },
   { pair_id: 24, word1: "Introverted", word2: "Anxious", condition: "matched_negative" },
   { pair_id: 25, word1: "Shy", word2: "Nervous", condition: "matched_negative" },
-  { pair_id: 26, word1: "Withdrawn", word2: "Tense", condition: "matched_negative" },
-
+  { pair_id: 26, word1: "Withdrawn", word2: "Tense", condition: "matched_negative" }
 ];
 
-// RUN
 const randomized = jsPsych.randomization.shuffle(mainStimuli.map(randomizePairSides));
 
 randomized.forEach(item => {
@@ -179,7 +237,7 @@ randomized.forEach(item => {
 
 timeline.push({
   type: jsPsychHtmlKeyboardResponse,
-  stimulus: "<p>Done! Press any key.</p>"
+  stimulus: "<p>Done! Press any key to submit your responses.</p>"
 });
 
 jsPsych.run(timeline);
