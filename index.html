@@ -193,27 +193,81 @@ const fixation = {
 timeline.push({
   type: jsPsychInstructions,
   pages: [
-    `<p>Each job requires a specific skill set but also specific personality attributes to be performed successfully.</p>
-     <p>Accordingly, in choosing the best job candidate, hiring managers are often assessing if applicants possess the required, desirable personality attributes for the job they applied for.</p>
-     <p>In this study, you will be presented with pairs of adjectives reflecting various personality attributes.</p>
-     <p>For each pair, your task will be to identify the more desirable personality attribute in a person applying for a Customer Service Representative job.</p>`,
 
-    `<p><strong>Customer Service Representative job description</strong></p>
-     <p>A Customer Service Representative is responsible for providing high-quality support to customers by addressing inquiries, resolving issues, and delivering accurate information about products and services.</p>
-     <p>This role involves communicating with customers via phone, email, or chat, ensuring a positive and efficient customer experience.</p>
-     <p>Key responsibilities include identifying customer needs, troubleshooting problems, processing orders or requests, escalating complex issues when necessary, maintaining accurate records, and following up to ensure resolution and satisfaction.</p>`,
+`
+<div style="
+max-width:760px;
+margin:0 auto;
+text-align:left;
+color:white;
+font-family:Arial, sans-serif;
+line-height:1.35;
+font-size:17px;
+">
 
-    `<p>You will receive 1 SONA research participation credit for completing this task.</p>
-     <p>If you correctly identify the more desirable attribute in over 90% of the pairs, your reward will double and you will be awarded 2 SONA research participation credits in total.</p>`,
+<div style="text-align:center; font-weight:bold; font-size:28px; margin-bottom:28px;">
+INSTRUCTIONS
+</div>
 
-    `<p>The adjective pairs will appear on the screen one pair at a time, with one adjective to the left and one adjective to the right.</p>
-     <p>Use the <strong>S</strong> key on your keyboard to select the adjective on the left.</p>
-     <p>Use the <strong>K</strong> key on your keyboard to select the adjective on the right.</p>
-     <p>Before the main questionnaire, you will complete 3 practice pairs to familiarize yourself with the task and keyboard keys.</p>`
+<p>
+Each job requires a specific skill set but also specific personality attributes to be performed successfully.
+Accordingly, in choosing the best job candidate, hiring managers are often assessing if applicants possess the required,
+desirable personality attributes for the job they applied for.
+</p>
+
+<p>
+In this study, you will be presented with 52 pairs of adjectives reflecting various personality attributes.
+For each pair, your task will be to identify the more desirable personality attribute in a person applying for a
+Customer Service Representative job.
+Please read a brief job description for this job carefully.
+</p>
+
+<div style="
+border:1px solid white;
+padding:14px;
+margin:24px 0;
+font-style:italic;
+">
+
+<div style="font-weight:bold; margin-bottom:12px;">
+Customer Service Representative job description
+</div>
+
+<p>
+Customer Service Representative is responsible for providing high-quality support to customers by addressing inquiries,
+resolving issues, and delivering accurate information about products and services.
+This role involves communicating with customers via phone, email, or chat, ensuring a positive and efficient customer experience.
+</p>
+
+<p>
+Key responsibilities include identifying customer needs, troubleshooting problems, processing orders or requests,
+and escalating complex issues when necessary.
+The representative maintains detailed and accurate records of customer interactions and follows up to ensure resolution and satisfaction.
+</p>
+
+</div>
+
+<p>
+You will receive 1 SONA research participation credit for completing this task.
+If you correctly identify the more desirable attribute in over 90% of the pairs, your reward will double and you will be awarded 2 SONA research participation credits in total.
+</p>
+
+<p>
+The adjective pairs will appear on the screen one pair at the time, with one adjective to the left and one to the right.
+Use the “S” key on your keyboard to select the one on the left and the “K” key on your keyboard to select one to the right.
+</p>
+
+<p>
+Before you proceed to the main questionnaire, you will be presented with 3 practice pairs to familiarize yourself with the task and get used to keyboard keys.
+</p>
+
+</div>
+`
+
   ],
-  show_clickable_nav: true
+  show_clickable_nav: true,
+  button_label_next: "->"
 });
-
 const practiceStimuli = [
   { pair_id: "P1", word1: "Kind", word2: "Reckless", condition: "practice" },
   { pair_id: "P2", word1: "Caring", word2: "Thorough", condition: "practice" },
