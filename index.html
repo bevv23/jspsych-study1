@@ -70,15 +70,16 @@ button,
 }
 
 .trial-wrapper {
-  height: 100vh;
-  width: 100vw;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 1000px;
+  text-align: center;
 }
 
 .trial-content {
-  width: 1000px;
+  width: 100%;
   text-align: center;
 }
 
@@ -119,11 +120,10 @@ button,
 }
 
 .fixation-wrapper {
-  height: 100vh;
-  width: 100vw;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .fixation {
@@ -262,7 +262,6 @@ timeline.push({
   pages: [
     `
     <div class="instructions-box">
-
       <div class="instructions-title">INSTRUCTIONS</div>
 
       <p>Each job requires a specific skill set but also specific personality attributes to be performed successfully. Accordingly, in choosing the best job candidate, hiring managers are often assessing if applicants possess the required, desirable personality attributes for the job they applied for.</p>
@@ -282,7 +281,6 @@ timeline.push({
       <p>The adjective pairs will appear on the screen one pair at a time, with one adjective to the left and one to the right. Use the “S” key on your keyboard to select the one on the left and the “K” key on your keyboard to select the one on the right.</p>
 
       <p>Before you proceed to the main questionnaire, you will be presented with 3 practice pairs to familiarize yourself with the task and get used to keyboard keys.</p>
-
     </div>
     `
   ],
