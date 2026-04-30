@@ -61,13 +61,13 @@ const jsPsych = initJsPsych({
 trials.forEach(function(t, index) {
   const n = index + 1;
 
-  final_url.searchParams.set("trial" + n + "pair_id", getSurveyValue("main_forced_choice", "pair_id"));
-  final_url.searchParams.set("trial" + n + "condition", getSurveyValue("main_forced_choice", "condition"));
-  final_url.searchParams.set("trial" + n + "_key_pressed", getSurveyValue("main_forced_choice", "response"));
-  final_url.searchParams.set("trial" + n + "_chosen_standardized", getSurveyValue("main_forced_choice", "chosen_standardized"));
-  final_url.searchParams.set("trial" + n + "_chose_more_desirable", getSurveyValue("main_forced_choice", "chose_more_desirable"));
-  final_url.searchParams.set("trial" + n + "_rt", getSurveyValue("main_forced_choice", "rt"));
-  final_url.searchParams.set("trial" + n + "_is_flipped", getSurveyValue("main_forced_choice", "is_flipped"));
+  final_url.searchParams.set("trial" + n + "pair_id", t.pair_id || "");
+  final_url.searchParams.set("trial" + n + "condition", t.condition || "");
+  final_url.searchParams.set("trial" + n + "_key_pressed", t.response || "");
+  final_url.searchParams.set("trial" + n + "_chosen_standardized", t.chosen_standardized || "");
+  final_url.searchParams.set("trial" + n + "_chose_more_desirable", t.chose_more_desirable ?? "");
+  final_url.searchParams.set("trial" + n + "_rt", t.rt || "");
+  final_url.searchParams.set("trial" + n + "_is_flipped", t.is_flipped ?? "");
 });
 
     final_url.searchParams.set("imc", getSurveyValue("imc_question", "imc"));
