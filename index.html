@@ -43,58 +43,15 @@ function getUrlParam(param) {
 const sona_id = getUrlParam("sona_id") || "NO_SONA_ID";
 const return_url = "https://uteppsychology.az1.qualtrics.com/jfe/form/SV_6nxWdRPgkB7ftMG";
 
-on_finish: function () {
+const jsPsych = initJsPsych({
+  on_finish: function () {
+    const main_data = jsPsych.data.get().filter({ task: "main_forced_choice" });
+    const trials = main_data.values();
 
-  const main_data = jsPsych.data.get().filter({ task: "main_forced_choice" });
-  const trials = main_data.values();
-
-  // Build clean JSON array of all trials
-  const clean_trials = trials.map(function(t, index) {
-    return {
-      trial_number: index + 1,
-      pair_id: t.pair_id || "",
-      condition: t.condition || "",
-      word1: t.word1 || "",
-      word2: t.word2 || "",
-      response: t.response || "",
-      chosen_standardized: t.chosen_standardized || "",
-      chose_more_desirable: t.chose_more_desirable ?? "",
-      rt: t.rt || "",
-      is_flipped: t.is_flipped ?? ""
-    };
-  });
-
-  // Survey helper (KEEP this for IMC + demographics)
-  function getSurveyValue(taskName, fieldName) {
-    const row = jsPsych.data.get().filter({ task: taskName }).values()[0] || {};
-    return row[fieldName] || "";
-  }
-
-  const final_url = new URL("https://uteppsychology.az1.qualtrics.com/jfe/form/SV_6nxWdRPgkB7ftMG");
-
-  final_url.searchParams.set("sona_id", sona_id);
-  final_url.searchParams.set("completed", "1");
-  final_url.searchParams.set("n_main_trials", String(trials.length));
-
-  // 🔥 THE IMPORTANT PART (JSON blob)
-  final_url.searchParams.set("jspsych_data", encodeURIComponent(JSON.stringify(clean_trials)));
-
-  // Keep your survey + demographics
-  final_url.searchParams.set("imc", getSurveyValue("imc_question", "imc"));
-  final_url.searchParams.set("english", getSurveyValue("english_question", "english"));
-  final_url.searchParams.set("careless", getSurveyValue("careless_question", "careless"));
-  final_url.searchParams.set("age", getSurveyValue("age_question", "age"));
-  final_url.searchParams.set("gender", getSurveyValue("gender_question", "gender"));
-  final_url.searchParams.set("gender_text", getSurveyValue("gender_question", "gender_text"));
-  final_url.searchParams.set("year_school", getSurveyValue("year_school_question", "year_school"));
-  final_url.searchParams.set("year_school_text", getSurveyValue("year_school_question", "year_school_text"));
-  final_url.searchParams.set("ethnicity", getSurveyValue("ethnicity_question", "ethnicity"));
-  final_url.searchParams.set("ethnicity_text", getSurveyValue("ethnicity_question", "ethnicity_text"));
-  final_url.searchParams.set("hispanic", getSurveyValue("hispanic_question", "hispanic"));
-
-  // Redirect back to Qualtrics
-  window.location.assign(final_url.toString());
-}
+    function getSurveyValue(taskName, fieldName) {
+      const row = jsPsych.data.get().filter({ task: taskName }).values()[0] || {};
+      return row[fieldName] || "";
+    }
 
     const final_url = new URL(return_url);
     final_url.searchParams.set("sona_id", sona_id);
