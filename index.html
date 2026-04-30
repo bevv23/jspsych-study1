@@ -57,17 +57,18 @@ const jsPsych = initJsPsych({
     final_url.searchParams.set("sona_id", sona_id);
     final_url.searchParams.set("completed", "1");
     final_url.searchParams.set("n_main_trials", String(trials.length));
+    
+trials.forEach(function(t, index) {
+  const n = index + 1;
 
-    trials.forEach(function(t, index) {
-      const n = index + 1;
-      final_url.searchParams.set("trial" + n + "pair_id", getSurveyValue("pair_id", "pair_id"));
-      final_url.searchParams.set("trial" + n + "condition", getSurveyValue("condition", "condition"));
-      final_url.searchParams.set("trial" + n + "_key_pressed", getSurveyValue("_key_pressed", "_key_pressed"));
-      final_url.searchParams.set("trial" + n + "_chosen_standardized",  getSurveyValue("_chosen_standardized", "_chosen_standardized"));
-      final_url.searchParams.set("trial" + n + "_chose_more_desirable",  getSurveyValue("_chose_more_desirable", "_chose_more_desirable"));
-      final_url.searchParams.set("trial" + n + "_rt",  getSurveyValue("_rt", "_rt"));
-      final_url.searchParams.set("trial" + n + "_is_flipped",  getSurveyValue("_is_flipped", "_is_flipped"));
-    });
+  final_url.searchParams.set("trial" + n + "pair_id", t.pair_id || "");
+  final_url.searchParams.set("trial" + n + "condition", t.condition || "");
+  final_url.searchParams.set("trial" + n + "_key_pressed", t.response || "");
+  final_url.searchParams.set("trial" + n + "_chosen_standardized", t.chosen_standardized || "");
+  final_url.searchParams.set("trial" + n + "_chose_more_desirable", t.chose_more_desirable ?? "");
+  final_url.searchParams.set("trial" + n + "_rt", t.rt || "");
+  final_url.searchParams.set("trial" + n + "_is_flipped", t.is_flipped ?? "");
+});
 
     final_url.searchParams.set("imc", getSurveyValue("imc_question", "imc"));
     final_url.searchParams.set("english", getSurveyValue("english_question", "english"));
