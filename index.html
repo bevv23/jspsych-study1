@@ -4,14 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Response Latencies Study 2</title>
-
 <script src="https://unpkg.com/jspsych@8.2.2"></script>
 <link href="https://unpkg.com/jspsych@8.2.2/css/jspsych.css" rel="stylesheet">
-
 <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.1.0"></script>
 <script src="https://unpkg.com/@jspsych/plugin-instructions@2.1.0"></script>
 <script src="https://unpkg.com/@jspsych/plugin-survey-html-form@2.1.0"></script>
-
 <style>
 html, body { margin:0!important; padding:0!important; background:#fff!important; color:#000!important; font-family:Arial,sans-serif; }
 .jspsych-display-element,.jspsych-content-wrapper,.jspsych-content { background:#fff!important; color:#000!important; }
@@ -23,7 +20,7 @@ button,.jspsych-btn { background:#fff!important; color:#000!important; border:1p
 .job-title,.question-title { font-weight:bold; margin-bottom:10px; }
 .question-block { margin-bottom:28px; }
 .option-line { display:block; margin:8px 0; }
-.text-input { width:320px; padding:6px; border:1px solid #000; font-size:16px; }
+.text-input { width:260px; padding:6px; border:1px solid #000; font-size:16px; }
 .trial-wrapper { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:1000px; text-align:center; }
 .trial-content { width:100%; text-align:center; }
 .pair-row { display:grid; grid-template-columns:1fr 1fr; column-gap:180px; align-items:center; }
@@ -36,19 +33,17 @@ button,.jspsych-btn { background:#fff!important; color:#000!important; border:1p
 .fixation { font-size:58px; color:#000!important; }
 </style>
 </head>
-
 <body></body>
-
 <script>
 function getUrlParam(param) {
-  var urlParams = new URLSearchParams(window.location.search);
+  const urlParams = new URLSearchParams(window.location.search);
   return urlParams.get(param);
 }
 
-var automatic_sona_id = getUrlParam("sona_id") || "";
-var return_url = "https://uteppsychology.az1.qualtrics.com/jfe/form/SV_6nxWdRPgkB7ftMG";
+const sona_id = getUrlParam("sona_id") || "NO_SONA_ID";
+const return_url = "https://uteppsychology.az1.qualtrics.com/jfe/form/SV_6nxWdRPgkB7ftMG";
 
-var jsPsych = initJsPsych({
+const jsPsych = initJsPsych({
   on_finish: function () {
     var main_data = jsPsych.data.get().filter({ task: "main_forced_choice" });
     var trials = main_data.values();
@@ -59,14 +54,9 @@ var jsPsych = initJsPsych({
     }
 
     var payload = {
+      sona_id: sona_id,
       completed: "1",
-
-      automatic_sona_id: automatic_sona_id,
-      sona_self_report_start: getSurveyValue("sona_id_start", "sona_self_report_start"),
-      sona_self_report_end: getSurveyValue("sona_id_end", "sona_self_report_end"),
-
       n_main_trials: String(trials.length),
-
       trials: trials.map(function(t, index) {
         return {
           n: index + 1,
@@ -81,7 +71,6 @@ var jsPsych = initJsPsych({
           is_flipped: t.is_flipped === undefined ? "" : t.is_flipped
         };
       }),
-
       imc: getSurveyValue("imc_question", "imc"),
       english: getSurveyValue("english_question", "english"),
       careless: getSurveyValue("careless_question", "careless"),
@@ -99,43 +88,14 @@ var jsPsych = initJsPsych({
   }
 });
 
-var timeline = [];
-
-function parseSurveyResponse(data) {
-  var response = data.response || {};
-  Object.keys(response).forEach(function(key) {
-    data[key] = response[key];
-  });
-}
-
-timeline.push({
-  type: jsPsychSurveyHtmlForm,
-  data: { task: "sona_id_start" },
-  html: `
-    <div class="form-box">
-      <div class="form-title">SONA PARTICIPATION ID</div>
-      <div class="question-block">
-        <div class="question-title">Please enter your anonymous SONA identity code.</div>
-        <p>This code is used only for awarding research participation credit. Do not enter your name.</p>
-        <input class="text-input" type="text" name="sona_self_report_start" required>
-      </div>
-    </div>
-  `,
-  button_label: "Continue",
-  on_finish: parseSurveyResponse
-});
+const timeline = [];
 
 function randomizePairSides(pair) {
-  var flip = Math.random() < 0.5;
-  return {
-    ...pair,
-    display_left: flip ? pair.word2 : pair.word1,
-    display_right: flip ? pair.word1 : pair.word2,
-    is_flipped: flip ? 1 : 0
-  };
+  const flip = Math.random() < 0.5;
+  return { ...pair, display_left: flip ? pair.word2 : pair.word1, display_right: flip ? pair.word1 : pair.word2, is_flipped: flip ? 1 : 0 };
 }
 
-function makeTrial(item, taskLabel, isPractice) {
+function makeTrial(item, taskLabel, isPractice = false) {
   return {
     type: jsPsychHtmlKeyboardResponse,
     stimulus: `
@@ -151,36 +111,24 @@ function makeTrial(item, taskLabel, isPractice) {
       </div></div>
     `,
     choices: ["s", "k"],
-    data: {
-      task: taskLabel,
-      pair_id: item.pair_id,
-      condition: item.condition,
-      word1: item.word1,
-      word2: item.word2,
-      is_flipped: item.is_flipped
-    },
+    data: { task: taskLabel, pair_id: item.pair_id, condition: item.condition, word1: item.word1, word2: item.word2, is_flipped: item.is_flipped },
     on_finish: function(data) {
-      var chosen = data.response === "s" ? item.display_left : item.display_right;
-
+      const chosen = data.response === "s" ? item.display_left : item.display_right;
       if (chosen === item.word1) data.chosen_standardized = "word1";
       else if (chosen === item.word2) data.chosen_standardized = "word2";
       else data.chosen_standardized = "";
-
-      if (item.condition === "mixed") {
-        data.chose_more_desirable = chosen === item.more_desirable ? 1 : 0;
-      } else {
-        data.chose_more_desirable = "";
-      }
+      if (item.condition === "mixed") data.chose_more_desirable = chosen === item.more_desirable ? 1 : 0;
+      else data.chose_more_desirable = "";
     }
   };
 }
 
-var fixation = {
-  type: jsPsychHtmlKeyboardResponse,
-  stimulus: '<div class="fixation-wrapper"><div class="fixation">+</div></div>',
-  choices: "NO_KEYS",
-  trial_duration: 500
-};
+function parseSurveyResponse(data) {
+  const response = data.response || {};
+  Object.keys(response).forEach(key => { data[key] = response[key]; });
+}
+
+const fixation = { type: jsPsychHtmlKeyboardResponse, stimulus: '<div class="fixation-wrapper"><div class="fixation">+</div></div>', choices: "NO_KEYS", trial_duration: 500 };
 
 timeline.push({
   type: jsPsychInstructions,
@@ -193,7 +141,7 @@ timeline.push({
       <p>Customer Service Representative is responsible for providing high-quality support to customers by addressing inquiries, resolving issues, and delivering accurate information about products and services. This role involves communicating with customers via phone, email, or chat, ensuring a positive and efficient customer experience.</p>
       <p>Key responsibilities include identifying customer needs, troubleshooting problems, processing orders or requests, and escalating complex issues when necessary. The representative maintains detailed and accurate records of customer interactions and follows up to ensure resolution and satisfaction.</p></div>
       <p>You will receive 1 SONA research participation credit for completing this task. If you correctly identify the more desirable attribute in over 90% of the pairs, your reward will double and you will be awarded 2 SONA research participation credit in total.</p>
-      <p>The adjective pairs will appear on the screen one pair at a time, with one adjective to the left and one to the right. Use the “S” key on your keyboard to select the one on the left and the “K” key on your keyboard to select the one to the right.</p>
+      <p>The adjective pairs will appear on the screen one pair at the time, with one adjective to the left and one to the right. Use the “S” key on your keyboard to select the one on the left and the “K” key on your keyboard to select one to the right.</p>
       <p>Before you proceed to the main questionnaire, you will be presented with 3 practice pairs to familiarize yourself with the task and get used to keyboard keys.</p>
     </div>`],
   show_clickable_nav: true,
@@ -202,13 +150,13 @@ timeline.push({
   button_label_next: "->"
 });
 
-var practiceStimuli = [
+const practiceStimuli = [
   { pair_id: "P1", word1: "Kind", word2: "Reckless", condition: "practice" },
   { pair_id: "P2", word1: "Caring", word2: "Thorough", condition: "practice" },
   { pair_id: "P3", word1: "Harsh", word2: "Careless", condition: "practice" }
 ];
 
-practiceStimuli.map(randomizePairSides).forEach(function(item) {
+practiceStimuli.map(randomizePairSides).forEach(item => {
   timeline.push(fixation);
   timeline.push(makeTrial(item, "practice_forced_choice", true));
 });
@@ -222,7 +170,7 @@ timeline.push({
   button_label_next: "Begin"
 });
 
-var mainStimuli = [
+const mainStimuli = [
   { pair_id: 1, word1: "Agreeable", word2: "Polished", condition: "matched_positive" },
   { pair_id: 2, word1: "Cooperative", word2: "Precise", condition: "matched_positive" },
   { pair_id: 3, word1: "Helpful", word2: "Efficient", condition: "matched_positive" },
@@ -277,7 +225,7 @@ var mainStimuli = [
   { pair_id: 52, word1: "Withdrawn", word2: "Polished", condition: "mixed", more_desirable: "Polished" }
 ];
 
-jsPsych.randomization.shuffle(mainStimuli.map(randomizePairSides)).forEach(function(item) {
+jsPsych.randomization.shuffle(mainStimuli.map(randomizePairSides)).forEach(item => {
   timeline.push(fixation);
   timeline.push(makeTrial(item, "main_forced_choice", false));
 });
@@ -288,9 +236,9 @@ timeline.push({
     <div class="debrief-box">
       <div class="debrief-title">DEBRIEF</div>
       <p>Thank you for completing the questionnaire!</p>
-      <p>As stated at the beginning of the study, the purpose of this study was to examine how efficient people are in identifying personality attributes that are more desirable in applicants for a specific job. You were presented with 52 pairs of personality attributes. Some of those pairs were mixed, composed of one undesirable and one desirable attribute for the target job, and some pairs were matched, composed of attributes that were similar in desirability for the target job.</p>
+      <p>As stated at the beginning of the study, the purpose of this study was to examine how efficient people are in identifying personality attributes that are more desirable in applicants for a specific job. You were presented with 52 pairs of personality attributes. Some of those pairs were mixed, composed of one undesirable and one desirable attribute for the target job (for instance, Kind vs Reckless), and some pairs were matched, composed of attributes that were similar in desirability for the target job (for instance, Caring vs Thorough). Our research hypothesis was that participants would identify the more desirable attribute more efficiently — that is, with less time and effort — in mixed pairs than in matched pairs.</p>
       <p>In mixed pairs, the more desirable option may be easier to distinguish, whereas in matched pairs the preferred option may be less clear and more open to individual interpretation. Accordingly, you will be awarded 2 SONA research participation credits for completing this study regardless of your choices of personality attributes.</p>
-      <p>Please proceed and answer the follow-up questions and demographic questions to complete this study.</p>
+      <p>Please proceed and answer the 3 follow-up questions and the demographic questions to complete this study.</p>
     </div>`],
   show_clickable_nav: true,
   allow_backward: false,
@@ -325,20 +273,14 @@ timeline.push({
 timeline.push({
   type: jsPsychSurveyHtmlForm,
   data: { task: "careless_question" },
-  html: `<div class="form-box"><div class="form-title">DATA QUALITY CHECKS</div><div class="question-block"><div class="question-title">3. Self-report measure of careless/insufficient effort responding</div><p>Results of our study will depend a lot on the quality of your responses. Is there any reason we should exclude your responses from our data analysis?</p><p><em>You will receive 2 credits for this study no matter how you respond to this question.</em></p>
+  html: `<div class="form-box"><div class="form-title">DATA QUALITY CHECKS</div><div class="question-block"><div class="question-title">3. Self-report measure of careless/insufficient effort responding</div><p>Results of our study will depend a lot on the quality of your responses. Is there any reason we should exclude your responses from our data analysis (e.g., you were being distracted while choosing the attributes; your computer was malfunctioning while completing the questionnaire; you did not put forth an effort in identifying more desirable attributes; you were selecting attributes at random…)?</p><p><em>You will receive 2 credits for this study no matter how you respond to this question.</em></p>
   <label class="option-line"><input type="radio" name="careless" value="1" required> Yes – my responses SHOULD be thrown out</label>
   <label class="option-line"><input type="radio" name="careless" value="2"> No – my survey responses SHOULD NOT be thrown out</label></div></div>`,
   button_label: "Next",
   on_finish: parseSurveyResponse
 });
 
-timeline.push({
-  type: jsPsychSurveyHtmlForm,
-  data: { task: "age_question" },
-  html: `<div class="form-box"><div class="form-title">DEMOGRAPHIC QUESTIONS</div><div class="question-block"><div class="question-title">How old are you?</div><input class="text-input" type="number" name="age" min="18" max="99" required></div></div>`,
-  button_label: "Next",
-  on_finish: parseSurveyResponse
-});
+timeline.push({ type: jsPsychSurveyHtmlForm, data: { task: "age_question" }, html: `<div class="form-box"><div class="form-title">DEMOGRAPHIC QUESTIONS</div><div class="question-block"><div class="question-title">How old are you?</div><input class="text-input" type="number" name="age" min="18" max="99" required></div></div>`, button_label: "Next", on_finish: parseSurveyResponse });
 
 timeline.push({
   type: jsPsychSurveyHtmlForm,
@@ -388,23 +330,6 @@ timeline.push({
   <label class="option-line"><input type="radio" name="hispanic" value="1" required> Yes</label>
   <label class="option-line"><input type="radio" name="hispanic" value="2"> No</label>
   <label class="option-line"><input type="radio" name="hispanic" value="3"> Prefer not to answer</label></div></div>`,
-  button_label: "Next",
-  on_finish: parseSurveyResponse
-});
-
-timeline.push({
-  type: jsPsychSurveyHtmlForm,
-  data: { task: "sona_id_end" },
-  html: `
-    <div class="form-box">
-      <div class="form-title">FINAL CREDIT VERIFICATION</div>
-      <div class="question-block">
-        <div class="question-title">Please re-enter your anonymous SONA identity code.</div>
-        <p>This is used to verify research participation credit. Do not enter your name.</p>
-        <input class="text-input" type="text" name="sona_self_report_end" required>
-      </div>
-    </div>
-  `,
   button_label: "Submit",
   on_finish: parseSurveyResponse
 });
