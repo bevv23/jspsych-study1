@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Response Latencies Study 2</title>
+<title>Desirable Attributes at Work</title>
 
 <script src="https://unpkg.com/jspsych@8.2.2"></script>
 <link href="https://unpkg.com/jspsych@8.2.2/css/jspsych.css" rel="stylesheet">
@@ -218,7 +218,7 @@ practiceStimuli.map(randomizePairSides).forEach(function(item) {
 
 timeline.push({
   type: jsPsychInstructions,
-  pages: ['<p>You have finished the practice trials.</p><p>The main task will begin next.</p><p>Please respond as quickly and accurately as possible.</p>'],
+  pages: ['<p>You have finished the practice trials.</p><p>The main task will begin next.</p>'],
   show_clickable_nav: true,
   allow_backward: false,
   show_page_number: false,
@@ -330,7 +330,7 @@ timeline.push({
 timeline.push({
   type: jsPsychSurveyHtmlForm,
   data: { task: "careless_question" },
-  html: `<div class="form-box"><div class="form-title">DATA QUALITY CHECKS</div><div class="question-block"><div class="question-title">3. Self-report measure of careless/insufficient effort responding</div><p>Results of our study will depend a lot on the quality of your responses. Is there any reason we should exclude your responses from our data analysis?</p><p><em>You will receive 2 credits for this study no matter how you respond to this question.</em></p>
+  html: `<div class="form-box"><div class="form-title">DATA QUALITY CHECKS</div><div class="question-block"><div class="question-title">3. Self-report measure of careless/insufficient effort responding</div><p>Results of our study will depend a lot on the quality of your responses. Is there any reason we should exclude your responses from our data analysis?</p>
   <label class="option-line"><input type="radio" name="careless" value="1" required> Yes – my responses SHOULD be thrown out</label>
   <label class="option-line"><input type="radio" name="careless" value="2"> No – my survey responses SHOULD NOT be thrown out</label></div></div>`,
   button_label: "Next",
