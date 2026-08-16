@@ -169,6 +169,145 @@ var fixation = {
   trial_duration: 500
 };
 
+  
+timeline.push({
+  type: jsPsychSurveyHtmlForm,
+  data: {
+    task: "consent",
+    consent_version: "2026-08-16"
+  },
+
+  html: `
+    <div class="form-box">
+
+      <div class="form-title">
+        PARTICIPANT INFORMATION SHEET
+      </div>
+
+      <p><strong>Title of the Project:</strong>
+      Examining Response Latencies in Item Desirability Matching – Study 2</p>
+
+      <p><strong>Principal Investigator:</strong>
+      Goran Pavlov, PhD.</p>
+
+      <p><strong>UTEP Department:</strong>
+      Psychology</p>
+
+      <p>Greetings,</p>
+
+      <p>
+      You are invited to be part of a research study. This study is a part of a
+      larger project exploring the relationship between human motivation,
+      cognition, and behavior in work-related contexts. The purpose of the
+      current study is to examine how efficient people are in identifying
+      personality attributes that are more desirable in applicants for a
+      specific job.
+      </p>
+
+      <p>
+      If you agree to take part in this study, you will be asked to compare
+      52 personality attribute pairs and, in each pair, identify the more
+      desirable attribute in a person applying for a Customer Service
+      Representative job. After, you will be asked to answer a couple of
+      follow-up questions and provide some basic demographic information.
+      The study is fully administered online and can only be completed on
+      devices with a physical keyboard (a PC or a laptop). Completing the
+      study should take you about 20 minutes.
+      </p>
+
+      <p>
+      You will receive 1 SONA research participation credit for completing
+      the study. If you complete the study and correctly identify the more
+      desirable personality attribute in over 90% of attribute pairs, your
+      reward will double and you will be awarded 2 SONA research participation
+      credit in total. If you begin the study and later decide to withdraw,
+      there are other research credit opportunities available to satisfy your
+      research participation requirements.
+      </p>
+
+      <p>
+      Your participation is voluntary, and it is totally up to you to decide
+      whether you want to participate. Even if you decide to be part of the
+      study now, you may change your mind and stop at any time. Your
+      participation, non-participation, and/or withdrawal will not affect your
+      grades or your relationship with your professors, college(s), or the
+      University of Texas at El Paso.
+      </p>
+
+      <p>
+      Participation in this study is anonymous, which means that no one will
+      know what your answers are. No personal identifying information will or
+      should be collected. So, please do not type your name, e-mail address,
+      student ID number, or other identifying information on any of the study
+      materials.
+      </p>
+
+      <p style="text-align:center; font-weight:bold; margin-top:30px;">
+      YOUR DILIGENT RESPONSES ARE VERY IMPORTANT TO OUR RESEARCH.
+      </p>
+
+      <p style="text-align:center; font-weight:bold;">
+      WE THANK YOU FOR TAKING TIME AND EFFORT TO HELP US!
+      </p>
+
+      <hr style="margin:30px 0;">
+
+      <p><strong>Contact Information</strong></p>
+
+      <p>
+      If you have any questions, concerns, or complaints about this research
+      now or in the future, you may contact the principal investigator,
+      Dr. Goran Pavlov at gpavlov@utep.edu.
+      </p>
+
+      <p>
+      If you have questions about your rights as a research participant, or
+      wish to obtain information, ask questions, or discuss any concerns about
+      this study with someone other than the researcher(s), please contact the following:
+      </p>
+
+      <p>
+      <strong>The University of Texas at El Paso Institutional Review Board</strong><br>
+      Phone: 915-747-6590<br>
+      Email: irb@utep.edu
+      </p>
+
+      <hr style="margin:30px 0;">
+
+      <p>
+      Please indicate whether you agree to participate in this research study.
+      </p>
+
+      <label class="option-line">
+        <input type="radio" name="consent" value="agree" required>
+        <strong>I Agree</strong>
+      </label>
+
+      <label class="option-line">
+        <input type="radio" name="consent" value="decline">
+        I Do Not Agree
+      </label>
+
+    </div>
+  `,
+
+  button_label: "Continue",
+
+  on_finish: function(data) {
+    parseSurveyResponse(data);
+
+    if (data.consent !== "agree") {
+      jsPsych.abortExperiment(
+        '<div class="form-box">' +
+        '<div class="form-title">Thank You</div>' +
+        '<p>You have chosen not to participate in this research study.</p>' +
+        '<p>You may now close this window.</p>' +
+        '</div>'
+      );
+    }
+  }
+});
+
 timeline.push({
   type: jsPsychInstructions,
   pages: [`
